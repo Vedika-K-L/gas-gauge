@@ -108,8 +108,7 @@ def _demo_source(rt, s) -> None:
         interval = st.number_input("Demo reading interval (seconds)", 0.2, 30.0, float(s.demo_interval_s), 0.2, format="%.1f")
         if st.form_submit_button("Save demo settings"):
             _apply(rt, demo_drain_kg_per_hour=float(drain), demo_interval_s=float(interval))
-    st.button("Reset demo history", key="reset_demo_settings", on_click=rt.reset_demo,
-              help="Delete all demo readings and regenerate a week of history")
+    st.button("Reset demo history", key="reset_demo_settings", on_click=rt.reset_demo)
 
 
 def _wokwi_source(rt, s, snap) -> None:

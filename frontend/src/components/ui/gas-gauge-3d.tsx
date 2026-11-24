@@ -77,8 +77,8 @@ const VIEWS: { id: GasGaugeView; label: string }[] = [
 ]
 
 const SOURCE_CHIP: Record<GasDataSource, { text: string; cls: string }> = {
-  demo: { text: "DEMO · SIMULATED", cls: "border-[#f2a93b]/70 text-[#f2a93b]" },
-  wokwi: { text: "WOKWI · SIMULATION", cls: "border-[#2f9e63]/70 text-[#5fd08f]" },
+  demo: { text: "DEMO", cls: "border-[#f2a93b]/70 text-[#f2a93b]" },
+  wokwi: { text: "WOKWI", cls: "border-[#2f9e63]/70 text-[#5fd08f]" },
   hardware: { text: "LIVE HARDWARE", cls: "border-[#c6f135]/70 text-[#c6f135]" },
 }
 
@@ -1543,7 +1543,7 @@ export function GasGauge3D({
       </div>
 
       {/* bottom-right: part info or hint */}
-      <div className="absolute bottom-3 right-3 z-10 max-w-[15rem] sm:bottom-5 sm:right-5 sm:max-w-xs">
+      <div className="absolute bottom-[5.5rem] left-3 right-3 z-10 sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-xs">
         {selected ? (
           <div className="rounded-xl border border-[#c6f135]/40 bg-[#101311]/85 p-3 backdrop-blur-md">
             <div className="flex items-start justify-between gap-3">
@@ -1560,8 +1560,8 @@ export function GasGauge3D({
             <p className="mt-1.5 text-xs leading-relaxed text-[#c9d0ca]">{PART_INFO[selected].text}</p>
           </div>
         ) : (
-          <p className="pointer-events-none text-right font-mono text-[10px] uppercase leading-relaxed tracking-[0.16em] text-[#6d786f]">
-            Drag to rotate · Scroll to zoom
+          <p className="pointer-events-none text-right font-mono text-[9px] sm:text-[10px] uppercase leading-relaxed tracking-[0.16em] text-[#6d786f]">
+            Drag to rotate · Pinch/scroll to zoom
             <br />
             Click a part to inspect
           </p>

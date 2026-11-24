@@ -24,6 +24,10 @@ def _jump(rt, pct: float) -> None:
         src.command("jump_to_percent", pct)
 
 
+def _jump_slider(rt) -> None:
+    _jump(rt, float(st.session_state["demo_jump_pct"]))
+
+
 def _spike(rt, kg: float) -> None:
     src = _source(rt)
     if src:
@@ -44,8 +48,7 @@ def render_demo_controls(rt) -> None:
             st.selectbox("Scenario", list(SCENARIOS), key="demo_scenario",
                          format_func=lambda k: SCENARIOS[k], on_change=_set_scenario, args=(rt,))
         with c2:
-            st.slider("Jump to gas level (%)", 0, 100, 50, key="demo_jump_pct")
-            st.button("Move gas level to slider value", key="demo_go", on_click=lambda: _jump(rt, st.session_state["demo_jump_pct"]))
+            st.slider("Gas level (%)", 0, 100, 50, key="demo_jump_pct", on_change=_jump_slider, args=(rt,))
 
         st.markdown("**Quick presets**")
         presets = [
@@ -59,10 +62,8 @@ def render_demo_controls(rt) -> None:
             with col:
                 st.button(f"{label} ({pct:.0f}%)", key=f"demo_preset_{label}", on_click=_jump, args=(rt, pct))
         with cols[4]:
-            st.button("Spike -3 kg", key="demo_spike_down", on_click=_spike, args=(rt, -3.0),
-                      help="Sudden weight drop: triggers the abnormal weight change alert")
+            st.button("Spike -3 kg", key="demo_spike_down", on_click=_spike, args=(rt, -3.0))
         with cols[5]:
             st.button("Spike +3 kg", key="demo_spike_up", on_click=_spike, args=(rt, 3.0))
         with cols[6]:
-            st.button("Reset demo data", key="demo_reset", on_click=rt.reset_demo,
-                      help="Delete all demo readings and regenerate a week of history")
+            st.button("Reset demo data", key="demo_reset", on_click=rt.reset_demo)

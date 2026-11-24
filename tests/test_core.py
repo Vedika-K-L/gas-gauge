@@ -51,7 +51,7 @@ class ParserTests(unittest.TestCase):
 
 class GasMathTests(unittest.TestCase):
     def setUp(self):
-        self.s = Settings(cylinder_capacity_kg=14.2)  # 15 kg empty, 14.2 kg capacity
+        self.s = Settings(cylinder_capacity_kg=14.2, empty_cylinder_weight_kg=15.0)  # 15 kg empty, 14.2 kg capacity
 
     def test_formulas(self):
         g = analytics.gas_from_weight(22.1, self.s)
@@ -326,7 +326,7 @@ class ManagerTests(unittest.TestCase):
 
 class AlertTests(unittest.TestCase):
     def setUp(self):
-        self.s = Settings(cylinder_capacity_kg=14.2)
+        self.s = Settings(cylinder_capacity_kg=14.2, empty_cylinder_weight_kg=15.0)
         self.now = datetime(2026, 11, 21, 12, 0, 0)
 
     def snap(self, **kw):

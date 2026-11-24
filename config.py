@@ -85,6 +85,7 @@ THEMES = {
         "amber": "#f2a93b",
         "red": "#d0605c",
         "shadow": "0 8px 28px rgba(0,0,0,.35)",
+        "btn": "#222623",
         # glassmorphism + ambient lighting
         "glass_hi": "rgba(255,255,255,.075)",
         "glass_lo": "rgba(255,255,255,.012)",
@@ -108,6 +109,7 @@ THEMES = {
         "amber": "#c98512",
         "red": "#b5443f",
         "shadow": "0 6px 22px rgba(60,50,20,.10)",
+        "btn": "#ffffff",
         "glass_hi": "rgba(255,255,255,.70)",
         "glass_lo": "rgba(255,255,255,.28)",
         "glass_edge": "rgba(255,255,255,.95)",
@@ -127,7 +129,7 @@ class Settings:
 
     # Cylinder. Defaults are the example values used in the Wokwi sketch.
     cylinder_capacity_kg: float = 5.0
-    empty_cylinder_weight_kg: float = 15.0
+    empty_cylinder_weight_kg: float = 0.0
     # Dashboard-side calibration, applied to PHYSICAL HARDWARE readings only:
     #   calibrated_kg = raw_kg * calibration_factor + tare_offset_kg
     # 1.0 / 0.0 is a neutral pass-through, not a real calibration value.

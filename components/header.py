@@ -90,7 +90,6 @@ def render_header(rt) -> None:
             icon=":material/light_mode:" if dark else ":material/dark_mode:",
             on_click=_toggle_theme,
             args=(rt,),
-            help="Switch between the dark and light theme",
         )
     with c_settings:
         st.button(

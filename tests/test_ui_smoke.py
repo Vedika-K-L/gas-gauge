@@ -332,10 +332,7 @@ class UiSmokeTests(unittest.TestCase):
         self.assertIn("Critical gas level", page)
         self.assertIn("CRITICAL", page)
         demo_panel._jump(self.rt, 60.0)
-        for _ in range(40):
-            time.sleep(0.25)
-            if self.rt.manager.source.state()["target_weight"] is None:
-                break
+        time.sleep(1.5)  # let the new level be stored before the next change
         demo_panel._spike(self.rt, -2.0)
         time.sleep(2.2)
         page = self.run_app()

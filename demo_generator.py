@@ -58,8 +58,12 @@ class DemoSource(BaseSource):
                 self._offset = 0.0
             elif name == "jump_to_percent" and value is not None:
                 pct = min(max(float(value), 0.0), 100.0)
-                self._target = self.empty + (self.full - self.empty) * pct / 100.0
+                # Jump straight to the level (no slow glide) and emit a reading right away.
+                self._weight = self.empty + (self.full - self.empty) * pct / 100.0
+                self._target = None
+                self._scenario = "hold"
                 self._offset = 0.0
+                self._next_due = 0.0
             elif name == "spike" and value is not None:
                 self._offset += float(value)
             else:
@@ -155,6 +159,10 @@ def generate_history(empty: float, capacity: float, days: int = 7, step_minutes:
 
 def ensure_history(db, settings) -> None:
     """Seed demo history once, so charts are populated the first time demo mode is used."""
+    last = db.latest("demo") if db.count("demo") else None
+    if last is not None and last.weight is not None and not (
+            settings.empty_cylinder_weight_kg - 1.0 <= last.weight <= settings.full_weight_kg + 1.0):
+        db.clear("demo")  # saved with a different cylinder size: start again
     if db.count("demo") == 0:
         db.insert_many(
             generate_history(settings.empty_cylinder_weight_kg, settings.cylinder_capacity_kg)
