@@ -301,3 +301,41 @@ iframe[title*="gas_gauge_3d"] {
 @media (prefers-reduced-motion: reduce) {
   .gg-alert-print { animation: none !important; }
 }
+
+/* ---- 6. Widget colours: always follow the dashboard palette (readable in light and dark) ---- */
+.stApp button[data-testid^="stBaseButton"], .stApp .stButton > button, .stApp .stFormSubmitButton > button,
+.stApp [data-testid="stBaseButton-secondary"], .stApp [data-testid="stBaseButton-secondaryFormSubmit"] {
+  background: var(--btn) !important; color: var(--text) !important; border: 1px solid var(--border) !important;
+}
+.stApp button[data-testid^="stBaseButton"] *, .stApp .stButton > button * { color: inherit !important; fill: currentColor; }
+.stApp button[data-testid^="stBaseButton"]:hover, .stApp .stButton > button:hover {
+  border-color: var(--forest) !important; color: var(--text) !important;
+}
+.stApp [data-testid="stBaseButton-primary"], .stApp [data-testid="stBaseButton-primaryFormSubmit"],
+.stApp .stFormSubmitButton > button {
+  background: var(--forest-deep) !important; border-color: var(--forest) !important; color: #fff !important;
+}
+.stApp [data-testid="stBaseButton-primary"] *, .stApp [data-testid="stBaseButton-primaryFormSubmit"] *,
+.stApp .stFormSubmitButton > button * { color: #fff !important; }
+
+/* Expander header bar */
+.stApp [data-testid="stExpander"] summary, .stApp [data-testid="stExpander"] details > summary {
+  background: var(--btn) !important; color: var(--text) !important; border-radius: 14px;
+}
+.stApp [data-testid="stExpander"] summary *, .stApp [data-testid="stExpander"] summary svg { color: var(--text) !important; fill: currentColor; }
+.stApp [data-testid="stExpander"] details[open] > summary { border-bottom: 1px solid var(--border); border-radius: 14px 14px 0 0; }
+
+/* Radio dots, select arrow, checkbox boxes */
+.stApp [data-baseweb="radio"] > div:first-child { background: var(--btn) !important; border-color: var(--muted) !important; }
+.stApp [data-baseweb="radio"] [aria-checked="true"] + div, .stApp [data-baseweb="radio"] input:checked + div { background: var(--forest) !important; }
+.stApp [data-baseweb="select"] svg { color: var(--text) !important; fill: var(--text) !important; }
+.stApp [data-baseweb="select"] > div > div:last-child { background: var(--btn) !important; }
+.stApp [data-baseweb="checkbox"] > span:first-child { background: var(--btn) !important; border-color: var(--muted) !important; }
+
+/* Buttons wrapped by a tooltip (and any other wrapper) get the same palette */
+.stApp [data-testid="stTooltipHoverTarget"] button, .stApp [class*="stButton"] button, .stApp div[data-testid="stButton"] > button {
+  background: var(--btn) !important; color: var(--text) !important; border: 1px solid var(--border) !important;
+}
+.stApp [data-testid="stTooltipHoverTarget"] button *, .stApp [class*="stButton"] button * { color: inherit !important; }
+.stApp [data-testid="stBaseButton-primary"], .stApp [data-testid="stBaseButton-primary"] * { color: #fff !important; }
+.stApp [data-testid="stBaseButton-primary"] { background: var(--forest-deep) !important; }
