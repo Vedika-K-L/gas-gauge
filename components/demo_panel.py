@@ -1,6 +1,8 @@
 """Demo controls: raise/lower the gas level and trigger fault scenarios to test every alert."""
 from __future__ import annotations
 
+import time
+
 import streamlit as st
 
 from components.common import render
@@ -22,6 +24,7 @@ def _jump(rt, pct: float) -> None:
     src = _source(rt)
     if src:
         src.command("jump_to_percent", pct)
+        time.sleep(0.45)  # let the demo source emit the new reading before the page redraws
 
 
 def _jump_slider(rt) -> None:
@@ -32,6 +35,7 @@ def _spike(rt, kg: float) -> None:
     src = _source(rt)
     if src:
         src.command("spike", kg)
+        time.sleep(0.45)
 
 
 def render_demo_controls(rt) -> None:

@@ -35,7 +35,7 @@ def now() -> datetime:
 
 APP_NAME = "GAS GAUGE"
 APP_SUBTITLE = "SMART LPG MONITORING SYSTEM"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.3.0"
 
 # --- Operating modes -------------------------------------------------------
 # "tag" is the value stored in the database `source` column. Every query is
@@ -160,6 +160,9 @@ class Settings:
     refill_min_kg: float = 3.0
     stale_seconds: float = 15.0
 
+    # Bump when defaults change so old saved values for those fields are replaced
+    schema: int = 3
+
     # Runtime
     refresh_seconds: float = 3.0
     store_interval_s: float = 5.0
@@ -255,6 +258,9 @@ class Settings:
                     values[f.name] = str(raw[f.name])
             except (TypeError, ValueError):
                 continue
+        if raw.get("schema") != cls().schema:  # saved by an older version: use the new cylinder defaults
+            for key in ("cylinder_capacity_kg", "empty_cylinder_weight_kg", "refill_min_kg"):
+                values.pop(key, None)
         loaded = cls(**values)
         return loaded if not loaded.validate() else defaults
 

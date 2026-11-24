@@ -366,3 +366,13 @@ html, body, .stApp { max-width: 100%; overflow-x: hidden; }
   .js-plotly-plot .modebar { display: none !important; }
   .gg-kv { gap: 8px; }
 }
+
+/* ---- 8. Final word on buttons: every button follows the palette, whatever Streamlit wraps it in ---- */
+html body .stApp button:not([role="tab"]):not([data-testid*="primary"]):not([kind="primary"]) {
+  background: var(--btn) !important; color: var(--text) !important; border: 1px solid var(--border) !important;
+}
+html body .stApp button:not([role="tab"]):not([data-testid*="primary"]):not([kind="primary"]) * { color: var(--text) !important; }
+html body .stApp button[data-testid*="primary"], html body .stApp button[kind="primary"] {
+  background: var(--forest-deep) !important; color: #fff !important; border: 1px solid var(--forest) !important;
+}
+html body .stApp button[data-testid*="primary"] *, html body .stApp button[kind="primary"] * { color: #fff !important; }
