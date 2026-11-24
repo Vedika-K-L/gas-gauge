@@ -1,0 +1,22 @@
+# Builds the 3D viewer and commits frontend/dist, so Streamlit Community Cloud can serve it.
+name: build-3d-viewer
+on:
+  push:
+    paths: ["frontend/**"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install && npm run build
+        working-directory: frontend
+      - run: |
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git add -f frontend/dist
+          git diff --cached --quiet || (git commit -m "Build 3D viewer" && git push)

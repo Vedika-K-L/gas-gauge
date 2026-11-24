@@ -1,0 +1,303 @@
+/* GAS GAUGE - Bento / utilitarian industrial / modular typography.
+   Theme colour variables (--bg, --surface, --lime, ...) are injected by components/common.py. */
+
+:root {
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 18px;
+}
+
+/* ---- Streamlit chrome ---------------------------------------------------- */
+.stApp { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer,
+[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"] { display: none !important; }
+.block-container { padding: 1.4rem 2rem 3rem; max-width: 1500px; }
+
+.stApp, .stApp p, .stApp li, .stApp label, .stApp h1, .stApp h2, .stApp h3,
+[data-testid="stWidgetLabel"] p, [data-testid="stMarkdownContainer"] p { color: var(--text); }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color: var(--muted); }
+
+/* Inputs */
+.stApp input, .stApp textarea, .stApp [data-baseweb="select"] > div,
+.stApp [data-baseweb="input"], .stApp [data-baseweb="base-input"], .stApp [data-baseweb="textarea"] {
+  background: var(--surface2) !important; color: var(--text) !important; border-color: var(--border) !important;
+}
+.stApp input, .stApp textarea { font-family: var(--font-mono); font-size: 13px; }
+[data-baseweb="popover"] ul, [data-baseweb="menu"] { background: var(--surface) !important; color: var(--text) !important; }
+[data-baseweb="popover"] li { color: var(--text) !important; }
+
+/* Buttons */
+.stButton > button, .stFormSubmitButton > button {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 12px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em;
+  transition: border-color .2s ease, transform .15s ease, box-shadow .2s ease;
+}
+.stButton > button:hover, .stFormSubmitButton > button:hover {
+  border-color: var(--forest); color: var(--text); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.18);
+}
+.stFormSubmitButton > button { background: var(--forest-deep); border-color: var(--forest); color: #fff; }
+.stFormSubmitButton > button p, .stFormSubmitButton > button span { color: #fff; }
+
+/* Radio as compact segmented control */
+.stRadio [role="radiogroup"] { gap: .4rem; }
+.stRadio label p { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; }
+
+/* Tabs */
+.stTabs [data-baseweb="tab"] { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.stTabs [aria-selected="true"] { color: var(--lime) !important; }
+.stTabs [data-baseweb="tab-highlight"] { background-color: var(--lime) !important; }
+.stTabs [data-baseweb="tab-border"] { background-color: var(--border) !important; }
+
+/* Expander */
+[data-testid="stExpander"], [data-testid="stExpander"] details {
+  border: 1px solid var(--border) !important; border-radius: 14px !important; background: var(--surface);
+}
+[data-testid="stExpander"] summary p { font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em; }
+
+/* Plotly charts live in their own bento card */
+[data-testid="stPlotlyChart"] {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 6px 6px 0; box-shadow: var(--shadow); overflow: hidden;
+}
+
+/* ---- Tones --------------------------------------------------------------- */
+.gg-tone-ok   { --tone: var(--lime); }
+.gg-tone-mid  { --tone: var(--forest); }
+.gg-tone-warn { --tone: var(--amber); }
+.gg-tone-crit { --tone: var(--red); }
+.gg-tone-demo { --tone: var(--lime); }
+.gg-tone-none { --tone: var(--muted); }
+
+/* ---- Header --------------------------------------------------------------- */
+.gg-brand { display: flex; align-items: center; gap: 14px; }
+.gg-logo { width: 48px; height: 48px; flex: none; }
+.gg-wordmark { font: 700 22px/1 var(--font-mono); letter-spacing: .2em; color: var(--text); }
+.gg-subtitle { margin-top: 6px; font: 500 10px/1 var(--font-mono); letter-spacing: .22em; color: var(--muted); }
+.gg-hstatus { display: flex; align-items: center; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+.gg-badge {
+  display: inline-block; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--border);
+  font: 700 11px/1 var(--font-mono); letter-spacing: .16em; color: var(--text); background: var(--surface);
+}
+.gg-mode-demo { color: var(--amber); border-color: var(--amber); }
+.gg-mode-wokwi { color: var(--forest); border-color: var(--forest); }
+.gg-pill {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+  background: color-mix(in srgb, var(--tone) 10%, transparent);
+  color: var(--tone); font: 600 11px/1 var(--font-mono); letter-spacing: .14em;
+}
+.gg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tone); display: inline-block; animation: gg-pulse 2s infinite; }
+@keyframes gg-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tone) 60%, transparent); }
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.gg-clock { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.15; }
+.gg-clock-time { font: 600 18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.gg-clock-date { font: 500 10px var(--font-mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+
+/* ---- Cards ---------------------------------------------------------------- */
+.gg-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; box-shadow: var(--shadow); box-sizing: border-box;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.gg-card:hover { transform: translateY(-2px); border-color: var(--forest); }
+.gg-label { font: 600 10px/1 var(--font-mono); letter-spacing: .2em; color: var(--muted); text-transform: uppercase; }
+.gg-metric { height: 118px; display: flex; flex-direction: column; justify-content: space-between; }
+.gg-value { display: flex; align-items: baseline; gap: 6px; }
+.gg-num { font: 600 34px/1 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--text); }
+.gg-unit { font: 500 12px var(--font-mono); color: var(--muted); letter-spacing: .08em; }
+.gg-sub { font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gg-metric.gg-tone-warn .gg-num, .gg-metric.gg-tone-crit .gg-num { color: var(--tone); }
+.gg-metric .gg-pill { align-self: flex-start; }
+
+.gg-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.gg-card-foot { margin-top: 10px; font: 500 10px var(--font-mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.gg-tag {
+  font: 700 10px/1 var(--font-mono); letter-spacing: .14em; padding: 5px 8px; border-radius: 6px;
+  color: var(--amber); border: 1px solid var(--amber); margin-right: 8px;
+}
+.gg-status {
+  display: inline-block; font: 700 11px/1 var(--font-mono); letter-spacing: .16em; padding: 6px 10px; border-radius: 8px;
+  color: var(--tone); background: color-mix(in srgb, var(--tone) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
+}
+
+/* ---- Gauge ---------------------------------------------------------------- */
+.gg-gauge-card { min-height: 386px; display: flex; flex-direction: column; }
+.gg-gauge-body { display: grid; grid-template-columns: minmax(200px, 270px) 1fr; gap: 26px; align-items: center; flex: 1; }
+.gg-gauge-svg { width: 100%; height: auto; display: block; }
+.gg-track { stroke: var(--track); }
+.gg-arc {
+  stroke: var(--tone);
+  transition: stroke-dashoffset 1s cubic-bezier(.4, 0, .2, 1), stroke .4s ease;
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--tone) 55%, transparent));
+}
+.gg-arc-empty { opacity: 0; }
+.gg-tick { stroke: var(--muted); stroke-width: 1; opacity: .45; }
+.gg-tick-major { stroke-width: 2; opacity: .85; }
+.gg-mark-warn { stroke: var(--amber); stroke-width: 2.5; }
+.gg-mark-crit { stroke: var(--red); stroke-width: 2.5; }
+.gg-gauge-pct { font: 700 54px var(--font-mono); fill: var(--text); letter-spacing: -.03em; }
+.gg-gauge-sign { font-size: 22px; fill: var(--muted); }
+.gg-gauge-cap { font: 500 9px var(--font-mono); letter-spacing: .26em; fill: var(--muted); }
+.gg-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 11px 0; border-bottom: 1px dashed var(--border); }
+.gg-stat:last-child { border-bottom: 0; }
+.gg-stat-val { font: 600 24px var(--font-mono); font-variant-numeric: tabular-nums; }
+.gg-stat-val small { font: 500 12px var(--font-mono); color: var(--muted); margin-left: 5px; }
+
+/* ---- Alerts and banners --------------------------------------------------- */
+.gg-alerts { display: grid; gap: 10px; }
+.gg-alert {
+  display: flex; align-items: flex-start; gap: 14px; padding: 12px 16px; border-radius: 14px;
+  background: color-mix(in srgb, var(--tone) 9%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--tone) 38%, var(--border)); border-left: 4px solid var(--tone);
+}
+.gg-alert-icon {
+  flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--tone); color: var(--bg); font: 800 12px var(--font-mono);
+}
+.gg-alert-title { font: 700 12px var(--font-mono); letter-spacing: .1em; color: var(--tone); text-transform: uppercase; }
+.gg-alert-msg { margin-top: 3px; font-size: 13px; color: var(--text); line-height: 1.4; }
+.gg-allclear {
+  display: inline-flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--surface); font: 600 11px var(--font-mono); letter-spacing: .16em; color: var(--muted);
+}
+.gg-banner { padding: 9px 14px; border-radius: 12px; text-align: center; font: 700 11px var(--font-mono); letter-spacing: .16em; }
+.gg-banner-demo {
+  color: var(--amber); border: 1px dashed var(--amber);
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--amber) 18%, transparent) 0 14px, transparent 14px 28px);
+}
+.gg-banner-wokwi { color: var(--forest); border: 1px dashed var(--forest); background: color-mix(in srgb, var(--forest) 8%, transparent); }
+
+/* ---- Misc ------------------------------------------------------------------ */
+.gg-section-title { display: flex; align-items: center; gap: 14px; font: 600 11px var(--font-mono); letter-spacing: .26em; color: var(--muted); text-transform: uppercase; }
+.gg-section-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.gg-kv { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 13px; color: var(--muted); }
+.gg-kv:last-child { border-bottom: 0; }
+.gg-kv b { font: 600 14px var(--font-mono); color: var(--text); font-variant-numeric: tabular-nums; }
+.gg-footer { margin-top: 8px; text-align: center; font: 500 10px var(--font-mono); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gg-dot, .gg-arc, .gg-card { animation: none !important; transition: none !important; }
+}
+@media (max-width: 900px) {
+  .block-container { padding: 1rem 1rem 2rem; }
+  .gg-gauge-body { grid-template-columns: 1fr; }
+  .gg-gauge-svg { max-width: 260px; margin: 0 auto; }
+  .gg-num { font-size: 28px; }
+  .gg-metric { height: auto; min-height: 104px; gap: 8px; }
+  .gg-hstatus { justify-content: flex-start; }
+  .gg-clock { align-items: flex-start; }
+}
+
+
+/* =====================================================================================
+   v2 - five-part integration: glass panels, spotlight cards, dot-matrix alerts, live
+   analytics tiles and the 3D cylinder frame.
+   ===================================================================================== */
+
+/* ---- 1. Glassmorphism: ambient light behind translucent, blurred panels ----------- */
+.stApp {
+  background:
+    radial-gradient(900px 520px at 10% -6%, var(--glow-a), transparent 62%),
+    radial-gradient(700px 460px at 96% 6%, var(--glow-b), transparent 60%),
+    radial-gradient(900px 640px at 50% 112%, var(--glow-a), transparent 62%),
+    var(--bg);
+  background-attachment: fixed;
+}
+.gg-card, .gg-allclear, [data-testid="stPlotlyChart"], [data-testid="stExpander"] details {
+  background:
+    linear-gradient(150deg, var(--glass-hi), var(--glass-lo) 42%),
+    color-mix(in srgb, var(--surface) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  backdrop-filter: blur(16px) saturate(1.35);
+  box-shadow: inset 1px 1px 0 var(--glass-edge), inset 0 -1px 0 var(--glass-shade), var(--shadow);
+}
+
+/* ---- 2. Spotlight glow: a light that follows the pointer across every card -------- */
+.gg-card {
+  position: relative;
+  --spot: hsl(calc(78 + var(--gg-xp, 0) * 70) 92% 58%);
+}
+.gg-card.gg-tone-warn { --spot: var(--amber); }
+.gg-card.gg-tone-crit { --spot: var(--red); }
+.gg-card::before, .gg-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+}
+.gg-card::before {
+  padding: 1.5px;
+  background: radial-gradient(190px circle at var(--mx, -999px) var(--my, -999px), var(--spot), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.gg-card::after {
+  background: radial-gradient(280px circle at var(--mx, -999px) var(--my, -999px),
+    color-mix(in srgb, var(--spot) 15%, transparent), transparent 70%);
+}
+.gg-card:hover { transform: none; border-color: color-mix(in srgb, var(--spot) 50%, var(--glass-edge)); }
+iframe[height="0"] { display: none; }
+
+/* ---- 3. Dot-matrix alert printouts (tractor-feed paper, perforations, red ink) ----- */
+.gg-alerts { gap: 14px; }
+.gg-alert {
+  --ink: #1f2433; --perf: rgba(0, 0, 0, .15);
+  position: relative; display: block; padding: 10px 44px 12px; border: 0; border-radius: 3px;
+  background: repeating-linear-gradient(to bottom, rgba(124, 176, 124, .22) 0 22px, transparent 22px 44px), #fbfaf3;
+  color: var(--ink);
+  font-family: "VT323", "Courier New", ui-monospace, monospace; font-synthesis: none;
+  box-shadow: 0 0 0 1px rgba(60, 50, 30, .10), 0 1px 0 rgba(0, 0, 0, .06), 0 16px 30px -16px rgba(0, 0, 0, .65);
+}
+.gg-alert.gg-tone-crit { --ink: #b3202a; }
+.gg-alert::before, .gg-alert::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 26px;
+  background: radial-gradient(circle at 50% 11px, var(--bg) 3.4px, rgba(60, 50, 30, .35) 3.7px, transparent 4.8px) 0 0 / 26px 22px repeat-y;
+}
+.gg-alert::before { left: 0; border-right: 1px dashed var(--perf); }
+.gg-alert::after { right: 0; border-left: 1px dashed var(--perf); }
+.gg-alert-head { display: flex; justify-content: space-between; gap: 10px; font-size: 17px; letter-spacing: .08em; color: rgba(31, 36, 51, .6); }
+.gg-alert.gg-tone-crit .gg-alert-head { color: #b3202a; }
+.gg-alert-head span:first-child::before { content: "\25CF"; color: var(--tone); margin-right: 8px; }
+.gg-alert-title { margin-top: 2px; font: 400 25px/1.05 "VT323", "Courier New", monospace; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); }
+.gg-alert-msg { margin-top: 3px; font: 400 20px/1.1 "VT323", "Courier New", monospace; letter-spacing: .02em; color: #1f2433; }
+@keyframes gg-print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+.gg-alert-print { animation: gg-print .8s steps(16, end) both; }
+
+/* Toasts: the same paper, printed one sheet at a time */
+[data-testid="stToast"] {
+  background: repeating-linear-gradient(to bottom, rgba(124, 176, 124, .22) 0 22px, transparent 22px 44px), #fbfaf3 !important;
+  border: 1px dashed rgba(60, 50, 30, .3) !important; border-radius: 3px !important;
+  box-shadow: 0 16px 30px -14px rgba(0, 0, 0, .7) !important;
+}
+[data-testid="stToast"], [data-testid="stToast"] * {
+  color: #1f2433 !important; font-family: "VT323", "Courier New", monospace !important; font-size: 19px; letter-spacing: .03em;
+}
+
+/* ---- 4. Live analytics: stat tiles above the charts ---------------------------------- */
+.gg-livebar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.gg-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.gg-stat-tile { padding: 14px 16px; }
+.gg-stat-tile .gg-num { font-size: 26px; }
+.gg-stat-tile .gg-value { margin-top: 10px; }
+
+/* ---- 5. 3D cylinder viewer ----------------------------------------------------------- */
+iframe[title*="gas_gauge_3d"] {
+  display: block; width: 100% !important; border: 0; border-radius: 28px; background: transparent; box-shadow: var(--shadow);
+}
+[data-testid="stCustomComponentV1"] { margin-bottom: .4rem; }
+.gg-3d-hint code { font: 600 11px var(--font-mono); padding: 2px 6px; border-radius: 6px; background: var(--surface2); }
+.gg-wrap { white-space: normal; line-height: 1.7; }
+
+@media (max-width: 900px) {
+  .stApp { background-attachment: scroll; }
+  .gg-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gg-alert { padding: 10px 34px 12px; }
+  .gg-alert::before, .gg-alert::after { width: 20px; background-size: 20px 22px; }
+  .gg-alert-title { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gg-alert-print { animation: none !important; }
+}
