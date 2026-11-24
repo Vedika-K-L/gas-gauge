@@ -260,7 +260,6 @@ class UiSmokeTests(unittest.TestCase):
         page = self.run_app()
         self.assert_well_formed()
         self.assertIn("DEMO MODE", page)
-        self.assertIn("SIMULATED", page)
         self.assertIn("GAS GAUGE", page)
         self.assertIn("SMART LPG MONITORING SYSTEM", page)
         for label in ("Remaining gas", "Consumed today", "Total cylinder weight", "Estimated days left",
@@ -316,7 +315,7 @@ class UiSmokeTests(unittest.TestCase):
         self.assertEqual(self.rt.db.count("demo"), demo_rows_before)  # Wokwi data never lands in demo
         page = self.run_app()
         self.assert_well_formed()
-        self.assertIn("WOKWI SIMULATION", page)
+        self.assertIn("WOKWI", page)
         self.assertIn("IMPORTED", page)
 
     def test_demo_buttons_drive_the_alerts(self):
@@ -332,7 +331,12 @@ class UiSmokeTests(unittest.TestCase):
         page = self.run_app()
         self.assertIn("Critical gas level", page)
         self.assertIn("CRITICAL", page)
-        demo_panel._spike(self.rt, -3.0)
+        demo_panel._jump(self.rt, 60.0)
+        for _ in range(40):
+            time.sleep(0.25)
+            if self.rt.manager.source.state()["target_weight"] is None:
+                break
+        demo_panel._spike(self.rt, -2.0)
         time.sleep(2.2)
         page = self.run_app()
         self.assertIn("Abnormal weight change", page)

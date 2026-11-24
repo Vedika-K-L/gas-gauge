@@ -1,6 +1,8 @@
 """Demo mode: realistic simulated readings. Always stored with source = 'demo'."""
 from __future__ import annotations
 
+import config
+
 import math
 import random
 import threading
@@ -45,7 +47,7 @@ class DemoSource(BaseSource):
         self._last_emit: Optional[float] = None
 
     def describe(self) -> str:
-        return "Demo generator (simulated)"
+        return "Demo data"
 
     # -- controls used by the dashboard ---------------------------------------
     def command(self, name: str, value: Optional[float] = None) -> None:
@@ -82,7 +84,7 @@ class DemoSource(BaseSource):
             scenario = self._scenario
             self._advance(dt)
             weight = self._weight + self._offset
-        stamp = datetime.now().isoformat(timespec="seconds")
+        stamp = config.now().isoformat(timespec="seconds")
         if scenario == "disconnect":
             return None
         if scenario == "sensor_fault":
@@ -130,7 +132,7 @@ def generate_history(empty: float, capacity: float, days: int = 7, step_minutes:
     mid-point, so the 7D charts, refill detection and averages all have data.
     """
     rng = random.Random(seed)
-    end = (end or datetime.now()).replace(microsecond=0)
+    end = (end or config.now()).replace(microsecond=0)
     start = end - timedelta(days=days)
     swap_at = start + timedelta(days=days / 2)
     weight = empty + capacity * 0.35

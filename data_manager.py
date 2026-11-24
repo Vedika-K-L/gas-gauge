@@ -1,6 +1,8 @@
 """SQLite persistence. Every query is filtered by `source`, so demo / Wokwi / hardware never mix."""
 from __future__ import annotations
 
+import config
+
 import sqlite3
 from contextlib import closing
 from datetime import datetime, timedelta
@@ -61,7 +63,7 @@ class DataManager:
             return conn.execute("DELETE FROM readings WHERE source = ?", (source,)).rowcount
 
     def prune(self, retention_days: int) -> int:
-        cutoff = (datetime.now() - timedelta(days=retention_days)).isoformat(timespec="seconds")
+        cutoff = (config.now() - timedelta(days=retention_days)).isoformat(timespec="seconds")
         with self._connect() as conn:
             return conn.execute("DELETE FROM readings WHERE ts < ?", (cutoff,)).rowcount
 

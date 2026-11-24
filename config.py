@@ -5,7 +5,7 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass, fields
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +14,24 @@ ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "gas_history.db"
 SETTINGS_PATH = DATA_DIR / "settings.json"
+
+# Wall-clock timezone for everything the dashboard shows and stores. Cloud hosts run in UTC, so
+# the default is India Standard Time; override with the GAS_GAUGE_TZ environment variable
+# (e.g. "Europe/London"), or set it to "local" to use the machine's own clock.
+TIMEZONE = os.environ.get("GAS_GAUGE_TZ", "Asia/Kolkata")
+
+
+def now() -> datetime:
+    """Current time in TIMEZONE as a naive datetime (the rest of the app uses naive local times)."""
+    if TIMEZONE.lower() != "local":
+        try:
+            from zoneinfo import ZoneInfo
+
+            return datetime.now(ZoneInfo(TIMEZONE)).replace(tzinfo=None)
+        except Exception:
+            pass
+    return datetime.now()
+
 
 APP_NAME = "GAS GAUGE"
 APP_SUBTITLE = "SMART LPG MONITORING SYSTEM"
@@ -108,7 +126,7 @@ class Settings:
     data_source: str = "demo"
 
     # Cylinder. Defaults are the example values used in the Wokwi sketch.
-    cylinder_capacity_kg: float = 14.2
+    cylinder_capacity_kg: float = 5.0
     empty_cylinder_weight_kg: float = 15.0
     # Dashboard-side calibration, applied to PHYSICAL HARDWARE readings only:
     #   calibrated_kg = raw_kg * calibration_factor + tare_offset_kg
@@ -137,7 +155,7 @@ class Settings:
     low_pct: float = 25.0
     critical_pct: float = 10.0
     abnormal_delta_kg: float = 1.5
-    refill_min_kg: float = 5.0
+    refill_min_kg: float = 3.0
     stale_seconds: float = 15.0
 
     # Runtime

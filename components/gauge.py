@@ -54,10 +54,6 @@ def gauge_svg(pct: Optional[float], settings) -> str:
 
 def build_gauge_html(gas, settings, mode: str, latest_ts: Optional[str], source_label: str) -> str:
     tag = ""
-    if mode == "demo":
-        tag = '<span class="gg-tag">SIMULATED</span>'
-    elif mode == "wokwi":
-        tag = '<span class="gg-tag">SIMULATION</span>'
     updated = f"UPDATED {ago(latest_ts).upper()}" if latest_ts else "NO READING YET"
     return f"""
     <div class="gg-card gg-gauge-card gg-tone-{esc(gas.tone)}">

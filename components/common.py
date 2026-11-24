@@ -32,7 +32,7 @@ def ago(iso_ts: Optional[str], now: Optional[datetime] = None) -> str:
         then = datetime.fromisoformat(iso_ts)
     except ValueError:
         return "unknown"
-    seconds = int(((now or datetime.now()) - then).total_seconds())
+    seconds = int(((now or config.now()) - then).total_seconds())
     if seconds < 2:
         return "just now"
     if seconds < 60:

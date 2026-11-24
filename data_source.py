@@ -7,6 +7,8 @@ a source never touches the dashboard code.
 """
 from __future__ import annotations
 
+import config
+
 import json
 import math
 import re
@@ -22,7 +24,7 @@ SENSOR_ERROR = "error"
 
 
 def now_iso() -> str:
-    return datetime.now().isoformat(timespec="seconds")
+    return config.now().isoformat(timespec="seconds")
 
 
 @dataclass
@@ -134,7 +136,7 @@ def backdate(readings: list[Reading], interval_s: float = 1.0, end: Optional[dat
     Pasted or file-imported lines carry no timestamps; the sketch prints about
     one line per second, so this reconstructs a plausible timeline.
     """
-    end = end or datetime.now()
+    end = end or config.now()
     count = len(readings)
     for index, reading in enumerate(readings):
         moment = end - timedelta(seconds=(count - 1 - index) * interval_s)

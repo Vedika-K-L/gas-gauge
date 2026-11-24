@@ -39,10 +39,6 @@ def render_demo_controls(rt) -> None:
             return
         state = src.state()
         st.session_state["demo_scenario"] = state["scenario"]
-        st.caption(
-            "Simulated data only. It is stored separately and never mixed with Wokwi or hardware readings. "
-            "Gas drains at an accelerated rate so you can watch the gauge move."
-        )
         c1, c2 = st.columns([2, 3], gap="medium")
         with c1:
             st.selectbox("Scenario", list(SCENARIOS), key="demo_scenario",

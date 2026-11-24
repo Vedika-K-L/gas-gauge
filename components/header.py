@@ -38,7 +38,7 @@ def _status_fragment() -> None:
     settings = rt.settings
     conn = alerts.connection_summary(rt.manager.snapshot(), settings)
     mode = config.MODES[settings.data_source]
-    now = datetime.now()
+    now = config.now()
     render(
         f"""
         <div class="gg-hstatus">

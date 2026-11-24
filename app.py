@@ -25,7 +25,7 @@ from components.notifications import render_alerts, render_mode_banner, toast_ne
 from components.settings_panel import render_settings  # noqa: E402
 from runtime import get_runtime  # noqa: E402
 
-_CHART_SUFFIX = {"demo": " · DEMO DATA", "wokwi": " · WOKWI SIM", "hardware": ""}
+_CHART_SUFFIX = {"demo": "", "wokwi": "", "hardware": ""}
 
 
 @st.cache_data(ttl=30, show_spinner=False)
@@ -60,7 +60,7 @@ def main() -> None:
         mode = s.data_source
         tag = s.source_tag
         theme = s.theme
-        now = datetime.now()
+        now = config.now()
 
         snap = rt.manager.snapshot()
         conn = alerts.connection_summary(snap, s)

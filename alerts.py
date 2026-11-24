@@ -1,6 +1,8 @@
 """Alert rules and the connection summary shared by header, cards and notifications."""
 from __future__ import annotations
 
+import config
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional
@@ -53,7 +55,7 @@ def connection_summary(snap: dict, settings) -> Connection:
         return Connection("ready", "READY", "warn", "Ready. Paste serial text in Settings > Data source.")
 
     if mode == "demo":
-        return Connection("demo", "SIMULATED", "demo", "Demo generator. Not a real sensor.")
+        return Connection("demo", "ONLINE", "demo", "Demo data source.")
     if not snap["streaming"]:
         return Connection("imported", "IMPORTED", "ok", "Readings imported from pasted text.")
     return Connection("ok", "LIVE", "ok", snap["source_label"])
@@ -76,7 +78,7 @@ def _recent_jump(df: pd.DataFrame, now: datetime, abnormal_kg: float) -> Optiona
 
 def evaluate(snap: dict, conn: Connection, gas, recent: pd.DataFrame, settings, now: Optional[datetime] = None) -> list[Alert]:
     """Return the currently active alerts, most severe first."""
-    now = now or datetime.now()
+    now = now or config.now()
     out: list[Alert] = []
 
     if conn.code == "error":

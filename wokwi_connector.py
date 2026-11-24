@@ -13,6 +13,8 @@ All three feed the same parser, so the rest of the app is unaware of the bridge.
 """
 from __future__ import annotations
 
+import config
+
 import os
 import queue
 import time
@@ -159,7 +161,7 @@ class WokwiPasteSource(BaseSource):
                 ignored += 1
             else:
                 readings.append(reading)
-        backdate(readings, interval_s=interval_s, end=datetime.now())
+        backdate(readings, interval_s=interval_s, end=config.now())
         for reading in readings:
             self._queue.put(reading)
         return len(readings), ignored

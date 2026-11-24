@@ -43,7 +43,4 @@ def toast_new(active) -> None:
 
 
 def render_mode_banner(mode: str) -> None:
-    if mode == "demo":
-        render('<div class="gg-banner gg-banner-demo">DEMO MODE &middot; SIMULATED READINGS &middot; NOT FROM A REAL SENSOR</div>')
-    elif mode == "wokwi":
-        render('<div class="gg-banner gg-banner-wokwi">WOKWI SIMULATION &middot; DATA COMES FROM THE SIMULATED CIRCUIT, NOT PHYSICAL HARDWARE</div>')
+    return  # source is already shown by the mode badge in the header
