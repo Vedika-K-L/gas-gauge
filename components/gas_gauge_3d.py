@@ -71,6 +71,7 @@ def render_cylinder_3d(
     connected: bool,
     low_pct: float,
     critical_pct: float,
+    medium_pct: float = 60.0,
     height: int = 520,
     key: str = "gg_cylinder_3d",
 ) -> bool:
@@ -88,6 +89,7 @@ def render_cylinder_3d(
         connectionStatus="connected" if connected else "disconnected",
         lowThreshold=_num(low_pct),
         criticalThreshold=_num(critical_pct),
+        mediumThreshold=_num(medium_pct),
         initialView="cylinder",
         height=height,
         key=key,

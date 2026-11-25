@@ -87,6 +87,7 @@ def main() -> None:
             connected=conn.code in ("ok", "demo", "imported"),
             low_pct=s.low_pct,
             critical_pct=s.critical_pct,
+            medium_pct=s.medium_pct,
         )
 
         left, right = st.columns([1.25, 1], gap="medium")

@@ -49,6 +49,7 @@ function Viewer({ args, height }: { args: StreamlitArgs; height: number }) {
       connectionStatus={status}
       lowThreshold={Number.isFinite(num(args.lowThreshold)) ? num(args.lowThreshold) : 25}
       criticalThreshold={Number.isFinite(num(args.criticalThreshold)) ? num(args.criticalThreshold) : 10}
+      mediumThreshold={Number.isFinite(num(args.mediumThreshold)) ? num(args.mediumThreshold) : 60}
       initialView={view}
       height={height}
     />

@@ -32,6 +32,8 @@ export type GasGaugePart =
   | "loadCell"
   | "hx711"
   | "display"
+  | "arduino"
+  | "leds"
   | "base"
 
 export interface GasGauge3DProps {
@@ -49,6 +51,8 @@ export interface GasGauge3DProps {
   lowThreshold?: number
   /** Level (%) at or below which the gas turns red. Default 10. */
   criticalThreshold?: number
+  /** Level (%) above which the green LED is lit (sketch "normal"). Default 60. */
+  mediumThreshold?: number
   initialView?: GasGaugeView
   onViewChange?: (view: GasGaugeView) => void
   onPartSelect?: (part: GasGaugePart | null) => void
@@ -95,24 +99,38 @@ const PART_INFO: Record<GasGaugePart, { title: string; text: string }> = {
     title: "Load cell",
     text: "Strain-gauge bar. Wire colours follow E+ red, E− black, A− white, A+ green.",
   },
-  hx711: { title: "HX711 amplifier", text: "24-bit ADC that digitises the load-cell signal for the microcontroller." },
-  display: { title: "Weight display", text: "Shows the cylinderWeight value supplied by the dashboard." },
+  hx711: {
+    title: "HX711 amplifier",
+    text: "24-bit ADC for the load cell. GND, DT (to D6), SCK (to D7) and VCC go to the Arduino.",
+  },
+  display: {
+    title: "16×2 I2C LCD",
+    text: "Character LCD on the I2C bus: GND, VCC, SDA (A4), SCL (A5). Mirrors the weight and level the dashboard receives.",
+  },
+  arduino: {
+    title: "Arduino Uno",
+    text: "Reads the HX711, drives the LCD over I2C and the three LEDs on D2 to D4, and prints one serial line per second.",
+  },
+  leds: {
+    title: "Status LEDs",
+    text: "Red, green and yellow LEDs with resistors on a breadboard. Green above 60%, yellow above 25%, red otherwise; all off with no signal.",
+  },
   base: { title: "Base frame", text: "Powder-coated frame with rubber feet and ventilation slots." },
 }
 
 /** Which part labels are shown in each view. */
 const LABELS_FOR_VIEW: Record<GasGaugeView, GasGaugePart[]> = {
-  cylinder: ["valve", "collar", "cylinder", "display"],
+  cylinder: ["valve", "collar", "cylinder", "display", "arduino", "leds"],
   cutaway: ["gas", "cylinder"],
-  sensor: ["loadCell", "hx711", "plate", "display"],
-  exploded: ["valve", "collar", "cylinder", "gas", "plate", "loadCell", "hx711", "display", "base"],
+  sensor: ["loadCell", "hx711", "plate", "display", "arduino", "leds"],
+  exploded: ["valve", "collar", "cylinder", "gas", "plate", "loadCell", "hx711", "display", "arduino", "leds", "base"],
 }
 
 const CAMERA: Record<GasGaugeView, { pos: [number, number, number]; target: [number, number, number] }> = {
   cylinder: { pos: [6.6, 4.4, 8.6], target: [0, 3.1, 0] },
   cutaway: { pos: [2.4, 3.9, 9.2], target: [0, 3.0, 0] },
-  sensor: { pos: [4.2, 2.2, 5.8], target: [0.2, 0.5, 0.2] },
-  exploded: { pos: [9.5, 6.4, 15.5], target: [0, 4.6, 0] },
+  sensor: { pos: [7.2, 4.2, 8.4], target: [-0.2, 0.3, -1.4] },
+  exploded: { pos: [12.5, 8.0, 18.5], target: [-0.3, 3.8, -0.6] },
 }
 
 // Geometry (scene units; 1 unit is roughly 10 cm)
@@ -149,6 +167,7 @@ interface LiveState {
   connected: boolean
   low: number
   critical: number
+  medium: number
 }
 
 function canvasTexture(
@@ -349,30 +368,36 @@ function drawLedScale(g: CanvasRenderingContext2D, w: number, h: number) {
 }
 
 function drawDisplay(g: CanvasRenderingContext2D, w: number, h: number, s: LiveState) {
-  g.fillStyle = "#070b08"
-  g.fillRect(0, 0, w, h)
+  // 16x2 character LCD with a yellow-green backlight
   const hasLevel = finite(s.level)
-  const status = hasLevel ? statusOf(s.level as number, s.low, s.critical) : "ok"
-  const col = !s.connected || !hasLevel ? "#8a948c" : STATUS_COLOR[status]
-  g.fillStyle = "rgba(198,241,53,0.05)"
-  for (let y = 0; y < h; y += 4) g.fillRect(0, y, w, 1)
-  g.textBaseline = "alphabetic"
-  g.textAlign = "left"
-  g.fillStyle = "rgba(236,239,232,0.6)"
-  g.font = `600 ${h * 0.11}px ${MONO}`
-  g.fillText("WEIGHT", w * 0.06, h * 0.2)
-  g.textAlign = "right"
-  g.fillText(s.source === "hardware" ? "HW" : s.source === "wokwi" ? "SIM" : "DEMO", w * 0.94, h * 0.2)
-  g.textAlign = "left"
-  g.fillStyle = col
-  g.font = `700 ${h * 0.34}px ${MONO}`
-  g.fillText(finite(s.weight) ? s.weight.toFixed(2) : "--.--", w * 0.06, h * 0.62)
-  g.font = `600 ${h * 0.14}px ${MONO}`
-  g.fillText("kg", w * 0.78, h * 0.62)
-  g.font = `600 ${h * 0.12}px ${MONO}`
-  g.fillStyle = col
-  const line = !s.connected ? "NO SIGNAL · LAST VALUE" : hasLevel ? `GAS ${(s.level as number).toFixed(0)}% · ${STATUS_TEXT[status]}` : "WAITING FOR DATA"
-  g.fillText(line, w * 0.06, h * 0.88)
+  const on = s.connected && (hasLevel || finite(s.weight))
+  g.fillStyle = s.connected ? "#9cba22" : "#5d7314"
+  g.fillRect(0, 0, w, h)
+  const padX = w * 0.03
+  const padY = h * 0.1
+  const cw = (w - padX * 2) / 16
+  const ch = (h - padY * 2) / 2
+  const level = hasLevel ? (s.level as number) : null
+  const word = level == null ? "" : level > s.medium ? "NORMAL" : level > s.low ? "MEDIUM" : "LOW"
+  const line1 = !s.connected ? "NO SIGNAL" : finite(s.weight) ? `Wt ${s.weight.toFixed(2)} kg` : "WAITING DATA"
+  const line2 = !s.connected || level == null ? "" : `Gas ${level.toFixed(0)}% ${word}`
+  const lines = [line1, line2]
+  g.textBaseline = "middle"
+  g.textAlign = "center"
+  for (let r = 0; r < 2; r++) {
+    for (let c = 0; c < 16; c++) {
+      const x = padX + c * cw
+      const y = padY + r * ch
+      g.fillStyle = "rgba(40,62,6,0.16)"
+      g.fillRect(x + cw * 0.08, y + ch * 0.08, cw * 0.84, ch * 0.84)
+      const text = lines[r].padEnd(16, " ")[c]
+      if (on && text && text !== " ") {
+        g.fillStyle = "#16240a"
+        g.font = `700 ${ch * 0.82}px ${MONO}`
+        g.fillText(text, x + cw / 2, y + ch * 0.54)
+      }
+    }
+  }
 }
 
 /* ───────────────────────────── Scene ───────────────────────────── */
@@ -452,11 +477,11 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
   key.position.set(6, 11, 7)
   key.castShadow = true
   key.shadow.mapSize.set(2048, 2048)
-  key.shadow.camera.left = -8
-  key.shadow.camera.right = 8
-  key.shadow.camera.top = 10
-  key.shadow.camera.bottom = -4
-  key.shadow.camera.far = 40
+  key.shadow.camera.left = -12
+  key.shadow.camera.right = 12
+  key.shadow.camera.top = 12
+  key.shadow.camera.bottom = -10
+  key.shadow.camera.far = 50
   key.shadow.bias = -0.0004
   key.shadow.normalBias = 0.03
   scene.add(key)
@@ -825,24 +850,178 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
   terminal.position.set(-0.2, 0.09, 0.28)
   hx.add(terminal)
 
-  /* Display --------------------------------------------------------------------- */
-  const display = addPart("display", [0, 0, 0], [0, 0, 2.4], "Weight display", [0, 0.62, 0.2])
-  const bezel = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.62, 0.34), darkMetal)
-  bezel.position.set(0, 0.3, 2.45)
-  bezel.rotation.x = -0.35
+  /* 16x2 I2C LCD ----------------------------------------------------------------- */
+  const display = addPart("display", [0, 0, 0], [0, 0, 2.4], "16×2 LCD", [0, 0.75, 0.1])
+  const lcdStand = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.2, 0.55), darkMetal)
+  lcdStand.position.set(0, 0.1, 2.95)
+  display.add(lcdStand)
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.9, 0.14), rubber)
+  bezel.position.set(0, 0.72, 2.95)
+  bezel.rotation.x = -0.3
   display.add(bezel)
-  const screenTex = canvasTexture(512, 192, (g, w, h) => drawDisplay(g, w, h, initial))
+  const lcdPcb = new THREE.Mesh(new THREE.BoxGeometry(2.78, 1.12, 0.05), new THREE.MeshStandardMaterial({ color: 0x0b7a3e, roughness: 0.55 }))
+  lcdPcb.position.set(0, 0, -0.1)
+  bezel.add(lcdPcb)
+  const goldMat = new THREE.MeshStandardMaterial({ color: 0xd2b25a, metalness: 1, roughness: 0.3 })
+  const lcdHeader = new THREE.Mesh(new THREE.BoxGeometry(0.64, 0.1, 0.1), rubber)
+  lcdHeader.position.set(-0.7, 0.58, -0.1)
+  bezel.add(lcdHeader)
+  for (let i = 0; i < 4; i++) {
+    const pin = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.04), goldMat)
+    pin.position.set(-0.9 + i * 0.13 + 0.0, 0.62, -0.1)
+    bezel.add(pin)
+  }
+  const screenTex = canvasTexture(640, 190, (g, w, h) => drawDisplay(g, w, h, initial))
   textures.push(screenTex)
-  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.74, 0.5), new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }))
-  screen.position.set(0, 0, 0.175)
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(2.15, 0.64), new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false }))
+  screen.position.set(0, 0, 0.075)
   bezel.add(screen)
+
+  /* Arduino Uno -------------------------------------------------------------------- */
+  const arduino = addPart("arduino", [3.3, 0, -4.2], [0, 1.6, -1.0], "Arduino Uno", [0, 0.8, 0])
+  arduino.rotation.y = Math.PI // digital header faces the platform
+  const unoTex = canvasTexture(512, 384, (g, w, h) => {
+    g.fillStyle = "#1b6ea6"
+    g.fillRect(0, 0, w, h)
+    g.fillStyle = "rgba(255,255,255,0.9)"
+    g.textAlign = "center"
+    g.font = `800 54px ${MONO}`
+    g.fillText("UNO", w * 0.56, h * 0.58)
+    g.font = `700 20px ${MONO}`
+    g.fillText("ARDUINO", w * 0.56, h * 0.42)
+    g.font = `600 13px ${MONO}`
+    g.textAlign = "left"
+    g.fillText("DIGITAL (PWM~)", w * 0.3, h * 0.12)
+    g.textAlign = "right"
+    g.fillText("ANALOG IN", w * 0.94, h * 0.9)
+    g.textAlign = "left"
+    g.fillText("POWER", w * 0.34, h * 0.9)
+  })
+  textures.push(unoTex)
+  const unoSide = new THREE.MeshStandardMaterial({ color: 0x14557f, roughness: 0.6 })
+  const unoTop = new THREE.MeshStandardMaterial({ map: unoTex, roughness: 0.5, metalness: 0.1 })
+  const uno = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.07, 2.0), [unoSide, unoSide, unoTop, unoSide, unoSide, unoSide])
+  uno.position.y = 0.14
+  arduino.add(uno)
+  ;[[-1.1, -0.8], [1.1, -0.8], [-1.1, 0.8], [1.1, 0.8]].forEach(([x, z]) => {
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.11, 12), rubber)
+    foot.position.set(x, 0.055, z)
+    arduino.add(foot)
+  })
+  const usb = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.4, 0.52), alu)
+  usb.position.set(-1.12, 0.38, -0.48)
+  arduino.add(usb)
+  const jack = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.34, 0.46), rubber)
+  jack.position.set(-1.1, 0.35, 0.6)
+  arduino.add(jack)
+  const atmega = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.11, 0.3), rubber)
+  atmega.position.set(0.25, 0.23, 0.18)
+  arduino.add(atmega)
+  const crystal = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.16), alu)
+  crystal.position.set(-0.4, 0.23, -0.1)
+  arduino.add(crystal)
+  const resetBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xc0302b, roughness: 0.5 }))
+  resetBtn.position.set(-0.78, 0.23, -0.75)
+  arduino.add(resetBtn)
+  const headers: [number, number, number, number][] = [
+    // x, z, length, pin count
+    [-0.05, -0.95, 1.0, 8],
+    [0.95, -0.95, 0.8, 6],
+    [-0.2, 0.95, 0.75, 8],
+    [0.95, 0.95, 0.6, 6],
+  ]
+  headers.forEach(([x, z, len, n]) => {
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(len, 0.14, 0.1), rubber)
+    strip.position.set(x, 0.25, z)
+    arduino.add(strip)
+    for (let k = 0; k < n; k++) {
+      const pin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.06, 0.03), goldMat)
+      pin.position.set(x - len / 2 + (len / n) * (k + 0.5), 0.34, z)
+      arduino.add(pin)
+    }
+  })
+  const unoOnMat = new THREE.MeshStandardMaterial({ color: 0x1a3a22, emissive: new THREE.Color(0x35e06a), emissiveIntensity: 0.05, roughness: 0.4 })
+  const onLed = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.06), unoOnMat)
+  onLed.position.set(0.95, 0.2, 0.3)
+  arduino.add(onLed)
+
+  /* Breadboard with three status LEDs and resistors ----------------------------------------- */
+  const leds = addPart("leds", [-4.5, 0, -3.0], [-1.0, 1.6, -0.6], "Status LEDs", [0, 0.9, 0])
+  leds.rotation.y = 0.28
+  const bbTex = canvasTexture(1024, 448, (g, w, h) => {
+    g.fillStyle = "#ebe8e0"
+    g.fillRect(0, 0, w, h)
+    g.fillStyle = "#d3cfc4"
+    g.fillRect(0, h * 0.46, w, h * 0.08)
+    g.fillStyle = "#c9342f"
+    g.fillRect(w * 0.04, h * 0.06, w * 0.92, 3)
+    g.fillRect(w * 0.04, h * 0.88, w * 0.92, 3)
+    g.fillStyle = "#2f66c9"
+    g.fillRect(w * 0.04, h * 0.12, w * 0.92, 3)
+    g.fillRect(w * 0.04, h * 0.94, w * 0.92, 3)
+    g.fillStyle = "rgba(60,58,50,0.75)"
+    for (let c = 0; c < 30; c++) {
+      const x = w * 0.06 + (c / 29) * w * 0.88
+      for (let r = 0; r < 5; r++) {
+        g.fillRect(x - 3, h * 0.2 + r * h * 0.05, 6, 6)
+        g.fillRect(x - 3, h * 0.58 + r * h * 0.05, 6, 6)
+      }
+    }
+  })
+  textures.push(bbTex)
+  const bbSide = new THREE.MeshStandardMaterial({ color: 0xcfcbc0, roughness: 0.7 })
+  const bbTop = new THREE.MeshStandardMaterial({ map: bbTex, roughness: 0.65 })
+  const board = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.16, 1.5), [bbSide, bbSide, bbTop, bbSide, bbSide, bbSide])
+  board.position.y = 0.08
+  leds.add(board)
+  const ledColors = [0xff2b2b, 0x28d65a, 0xffc21a] // red, green, yellow as in the circuit
+  const statusLedMats = ledColors.map(
+    (c) =>
+      new THREE.MeshStandardMaterial({
+        color: new THREE.Color(c).multiplyScalar(0.45),
+        emissive: new THREE.Color(c),
+        emissiveIntensity: 0.04,
+        roughness: 0.25,
+        transparent: true,
+        opacity: 0.93,
+      }),
+  )
+  const resistorMat = new THREE.MeshStandardMaterial({ color: 0xd9c08a, roughness: 0.7 })
+  const bandMats = [0xc0302b, 0x111111, 0x7a4a1c].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
+  const legMat = new THREE.MeshStandardMaterial({ color: 0xbfc4c8, metalness: 1, roughness: 0.3 })
+  statusLedMats.forEach((mat, i) => {
+    const x = -0.95 + i * 0.95
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.13, 20), mat)
+    body.position.set(x, 0.23, -0.12)
+    leds.add(body)
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.1, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat)
+    dome.position.set(x, 0.295, -0.12)
+    leds.add(dome)
+    ;[-0.04, 0.04].forEach((dx) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.12, 6), legMat)
+      leg.position.set(x + dx, 0.18, -0.12)
+      leds.add(leg)
+    })
+    const res = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.5, 14), resistorMat)
+    res.rotation.x = Math.PI / 2
+    res.position.set(x, 0.24, 0.42)
+    leds.add(res)
+    ;[-0.12, 0, 0.12].forEach((dz, k) => {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.035, 14), bandMats[k])
+      band.rotation.x = Math.PI / 2
+      band.position.set(x, 0.24, 0.42 + dz)
+      leds.add(band)
+    })
+  })
 
   /* Wires between load cell, HX711 and the outgoing signal cable ------------------- */
   const wireColors = [0xd33b34, 0x151515, 0xf0f0f0, 0x2faa55]
-  const outColors = [0xd33b34, 0x151515, 0xe7c23a, 0x3a7fe0]
+  const outColors = [0x151515, 0xe7c23a, 0x3a7fe0, 0xd33b34] // HX711 GND, DT, SCK, VCC
+  const i2cColors = [0x151515, 0xd33b34, 0x2faa55, 0x2fb7c9] // LCD GND, VCC, SDA, SCL
+  const ledWireColors = [0x2faa55, 0x2faa55, 0x2faa55]
   const wireMeshes: THREE.Mesh[] = []
   const wireCurves: THREE.CatmullRomCurve3[] = []
-  const wireMats = [...wireColors, ...outColors].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
+  const wireMats = [...wireColors, ...outColors, ...i2cColors, ...ledWireColors].map((c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 }))
   const a = new THREE.Vector3()
   const b = new THREE.Vector3()
   const rebuildWires = () => {
@@ -867,16 +1046,66 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
       root.add(mesh)
       wireMeshes.push(mesh)
     }
+    const addTube = (pts: THREE.Vector3[], matIndex: number, part: GasGaugePart) => {
+      const curve = new THREE.CatmullRomCurve3(pts, false, "centripetal")
+      wireCurves.push(curve)
+      const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(24, pts.length * 12), 0.022, 6, false), wireMats[matIndex])
+      mesh.userData.partId = part
+      root.add(mesh)
+      wireMeshes.push(mesh)
+    }
+    const up = (v: THREE.Vector3, x: number, y: number, z: number) => v.clone().add(new THREE.Vector3(x, y, z))
+    // HX711 (GND, DT, SCK, VCC) to the Arduino digital header
+    const hxPins = [0.95, 0.75, 0.55, 0.35]
     for (let i = 0; i < 4; i++) {
       a.set(-0.3 + i * 0.2, 0.12, -0.32)
       hx.localToWorld(a)
-      b.set(a.x + (i - 1.5) * 0.04, 0.2, -2.32)
-      const curve = new THREE.CatmullRomCurve3([a.clone(), a.clone().add(new THREE.Vector3(0, 0.18, -0.2)), new THREE.Vector3(a.x, 0.28, (a.z + b.z) / 2), b.clone()])
-      wireCurves.push(curve)
-      const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 20, 0.022, 6, false), wireMats[4 + i])
-      mesh.userData.partId = "hx711"
-      root.add(mesh)
-      wireMeshes.push(mesh)
+      b.set(hxPins[i], 0.3, -0.95)
+      arduino.localToWorld(b)
+      const mid = a.clone().lerp(b, 0.5)
+      mid.y = Math.max(a.y, b.y) + 0.12 + i * 0.03
+      addTube([a.clone(), up(a, 0, 0.16, -0.2), mid, up(b, 0, 0.14, 0.35), b.clone()], 4 + i, "hx711")
+    }
+    // LCD I2C (GND, VCC, SDA, SCL) around the right side to the Arduino power/analog headers
+    const i2cEnds: [number, number, number][] = [
+      [0.0, 0.3, 0.95],
+      [-0.2, 0.3, 0.95],
+      [0.9, 0.3, 0.95],
+      [1.05, 0.3, 0.95],
+    ]
+    for (let i = 0; i < 4; i++) {
+      a.set(-0.9 + i * 0.13, 0.62, -0.1)
+      bezel.localToWorld(a)
+      b.set(...i2cEnds[i])
+      arduino.localToWorld(b)
+      const y = Math.min(a.y, b.y) + 0.06
+      const d = i * 0.12
+      addTube(
+        [
+          a.clone(),
+          up(a, 0.15, 0.12, 0.25),
+          new THREE.Vector3(4.6 + d, y, 2.6),
+          new THREE.Vector3(5.7 + d, y, 0),
+          new THREE.Vector3(5.7 + d, y, -6.0),
+          new THREE.Vector3(b.x, y, -6.0),
+          up(b, 0, 0.14, -0.4),
+          b.clone(),
+        ],
+        8 + i,
+        "display",
+      )
+    }
+    // Arduino D2 to D4 to the LED anodes on the breadboard
+    const ledPins = [-0.05, -0.25, -0.45]
+    for (let i = 0; i < 3; i++) {
+      a.set(ledPins[i], 0.3, -0.95)
+      arduino.localToWorld(a)
+      b.set(-0.95 + i * 0.95, 0.2, -0.12)
+      leds.localToWorld(b)
+      const mid = a.clone().lerp(b, 0.5)
+      mid.y = Math.max(a.y, b.y) + 0.1 + i * 0.04
+      mid.z -= 0.25 + i * 0.12
+      addTube([a.clone(), up(a, 0, 0.14, 0.3), mid, up(b, 0, 0.3, 0.2), b.clone()], 12 + i, "leds")
     }
   }
   const pulseMat = new THREE.MeshBasicMaterial({ color: C.lime })
@@ -984,7 +1213,13 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
     levelTarget = hasLevel ? clamp(s.level as number, 0, 100) : 0
     const status = statusOf(levelTarget, s.low, s.critical)
     colorTarget.set(!s.connected || !hasLevel ? C.idle : STATUS_COLOR[status])
-    const key = [s.weight?.toFixed(2), s.level?.toFixed(0), s.connected, s.source, s.low, s.critical].join("|")
+    // status LEDs follow the sketch bands: green above medium, yellow above low, red otherwise
+    const lit = !s.connected || !hasLevel ? -1 : levelTarget > s.medium ? 1 : levelTarget > s.low ? 2 : 0
+    statusLedMats.forEach((m, i) => {
+      m.emissiveIntensity = i === lit ? 2.6 : 0.04
+    })
+    unoOnMat.emissiveIntensity = s.connected ? 2.2 : 0.05
+    const key = [s.weight?.toFixed(2), s.level?.toFixed(0), s.connected, s.source, s.low, s.critical, s.medium].join("|")
     if (key !== lastScreenKey) {
       lastScreenKey = key
       redraw(screenTex, (g, w, h) => drawDisplay(g, w, h, live))
@@ -1322,6 +1557,7 @@ export function GasGauge3D({
   connectionStatus,
   lowThreshold = 25,
   criticalThreshold = 10,
+  mediumThreshold = 60,
   initialView = "cylinder",
   onViewChange,
   onPartSelect,
@@ -1347,8 +1583,9 @@ export function GasGauge3D({
       connected: connectionStatus === "connected",
       low: lowThreshold,
       critical: criticalThreshold,
+      medium: mediumThreshold,
     }),
-    [gasLevel, remainingGas, cylinderWeight, cylinderCapacity, dataSource, connectionStatus, lowThreshold, criticalThreshold],
+    [gasLevel, remainingGas, cylinderWeight, cylinderCapacity, dataSource, connectionStatus, lowThreshold, criticalThreshold, mediumThreshold],
   )
 
   // latest values for the scene (read when the scene is (re)created)
