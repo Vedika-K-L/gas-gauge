@@ -132,8 +132,10 @@
 .gg-arc {
   stroke: var(--tone);
   transition: stroke-dashoffset 1s cubic-bezier(.4, 0, .2, 1), stroke .4s ease;
-  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--tone) 55%, transparent));
 }
+/* Glow = a wider, faint copy of the arc underneath (no SVG filter: filters inside blurred glass cards can blank the whole ring) */
+.gg-arc-glow { opacity: .22; }
+.gg-arc-glow.gg-arc-empty { opacity: 0; }
 .gg-arc-empty { opacity: 0; }
 .gg-tick { stroke: var(--muted); stroke-width: 1; opacity: .45; }
 .gg-tick-major { stroke-width: 2; opacity: .85; }
@@ -487,3 +489,34 @@ iframe[title*="gas_gauge_3d"] { height: clamp(380px, calc(100vh - 128px), 960px)
   .gg-pagetitle { font-size: 16px; }
   .gg-strip-more { display: none; }
 }
+
+
+/* ---- 10. Centring ---------------------------------------------------------------------- */
+/* Gauge card: ring and readouts form one block, centred in the card */
+.gg-gauge-card { align-items: stretch; }
+.gg-gauge-body {
+  grid-template-columns: minmax(190px, 270px) minmax(200px, 320px); justify-content: center; align-content: center;
+  gap: clamp(20px, 4vw, 56px); width: 100%; margin: 0 auto;
+}
+.gg-gauge-wrap { display: grid; place-items: center; width: 100%; }
+.gg-gauge-svg { width: 100%; max-width: 270px; aspect-ratio: 1 / 1; height: auto; overflow: visible; }
+.gg-card-foot { text-align: center; }
+@media (max-width: 900px) { .gg-gauge-body { grid-template-columns: minmax(0, 1fr); } }
+
+/* Sidebar: logo, name, menu and version all on the centre line */
+.gg-sidebrand { text-align: center; }
+.gg-sidebrand .gg-brand { flex-direction: column; justify-content: center; align-items: center; gap: 10px; text-align: center; }
+.gg-sidebrand .gg-subtitle { text-align: center; }
+.gg-navlabel, .gg-sidefoot { text-align: center; }
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid^="stBaseButton"] {
+  justify-content: center; text-align: center;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button p {
+  justify-content: center; text-align: center;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid="stBaseButton-primary"] {
+  box-shadow: none !important; border-left: 3px solid var(--lime) !important;
+}
+
+/* 3D page: the viewer is centred in the main area */
+[data-testid="stCustomComponentV1"], [data-testid="stCustomComponentV1"] iframe { margin-left: auto; margin-right: auto; }

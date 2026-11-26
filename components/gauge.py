@@ -40,6 +40,9 @@ def gauge_svg(pct: Optional[float], settings) -> str:
     return (
         '<svg class="gg-gauge-svg" viewBox="0 0 240 240" role="img" aria-label="Gas level gauge">'
         f'<circle class="gg-track" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="14"/>'
+        f'<circle class="{arc_class} gg-arc-glow" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="24" '
+        f'stroke-linecap="round" transform="rotate(-90 120 120)" '
+        f'stroke-dasharray="{_CIRCUMFERENCE:.2f}" stroke-dashoffset="{offset:.2f}"/>'
         f'<circle class="{arc_class}" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="14" '
         f'stroke-linecap="round" transform="rotate(-90 120 120)" '
         f'stroke-dasharray="{_CIRCUMFERENCE:.2f}" stroke-dashoffset="{offset:.2f}"/>'

@@ -133,6 +133,15 @@ const CAMERA: Record<GasGaugeView, { pos: [number, number, number]; target: [num
   exploded: { pos: [12.5, 8.0, 18.5], target: [-0.3, 3.8, -0.6] },
 }
 
+/** Half-height / half-width (world units) the whole scene needs around each view's target. The home camera is
+ *  pulled back until this fits the frame, so the model stays centred and uncropped at any viewer size. */
+const FIT: Record<GasGaugeView, [number, number]> = {
+  cylinder: [5.0, 7.4],
+  cutaway: [4.6, 4.4],
+  sensor: [3.4, 6.0],
+  exploded: [8.2, 11.0],
+}
+
 // Geometry (scene units; 1 unit is roughly 10 cm)
 const R = 1.5 // cylinder radius
 const FOOT_H = 0.3
@@ -1149,6 +1158,7 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
   let tween: null | { t0: number; dur: number; p0: THREE.Vector3; p1: THREE.Vector3; q0: THREE.Vector3; q1: THREE.Vector3 } = null
   let idleSince = performance.now()
   controls.addEventListener("start", () => {
+    userMoved = true
     tween = null
     controls.autoRotate = false
     idleSince = performance.now()
@@ -1158,10 +1168,20 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
     idleSince = performance.now()
   })
 
+  let userMoved = false
   const goTo = (v: GasGaugeView, animate: boolean) => {
     const c = CAMERA[v]
-    homePos.set(...c.pos)
     homeTarget.set(...c.target)
+    homePos.set(...c.pos)
+    // pull the camera back along its line of sight until the whole scene fits this frame
+    const off = homePos.clone().sub(homeTarget)
+    const dist = off.length()
+    const th = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+    const [halfH, halfW] = FIT[v]
+    const k = Math.max(1, halfH / (th * dist), halfW / (th * dist * Math.max(camera.aspect, 0.2)))
+    off.multiplyScalar(Math.min(k, controls.maxDistance / dist))
+    homePos.copy(homeTarget).add(off)
+    userMoved = false
     if (!animate || reduced) {
       camera.position.copy(homePos)
       controls.target.copy(homeTarget)
@@ -1310,6 +1330,7 @@ function createScene(mount: HTMLElement, cb: SceneCallbacks, initial: LiveState,
     camera.aspect = w / h
     camera.fov = camera.aspect < 0.9 ? 58 : camera.aspect < 1.3 ? 46 : 38
     camera.updateProjectionMatrix()
+    if (!userMoved) goTo(view, false) // keep the untouched home view centred and fully in frame
     dirty = true
   }
   const ro = new ResizeObserver(resize)
