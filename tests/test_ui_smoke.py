@@ -32,6 +32,9 @@ class FakeStreamlit:
         self.session_state = _State()
         self.html_out, self.markdown_out, self.messages, self.charts = [], [], [], []
         self.widgets = []
+        self.buttons = []  # (label, kwargs) for every st.button, so tests can check key / type / icon
+        self.query_params = {}
+        self.sidebar = _Ctx(self)
         self._resources = {}
 
     # layout
@@ -107,6 +110,7 @@ class FakeStreamlit:
 
     def button(self, label, **kw):
         self._record("button", label)
+        self.buttons.append((label, kw))
         return False
 
     form_submit_button = button
@@ -210,6 +214,9 @@ def check_balanced(test, markup):
 
 
 # ---------------------------------------------------------------- tests -----
+VIEW_IDS = ["overview", "cylinder", "analytics", "consumption", "alerts", "demo", "settings"]
+
+
 class UiSmokeTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -224,11 +231,24 @@ class UiSmokeTests(unittest.TestCase):
         self.rt.manager.stop()
         self.tmp.cleanup()
 
-    def run_app(self):
-        for bucket in (self.st.html_out, self.st.markdown_out, self.st.messages, self.st.charts):
+    def run_app(self, view=None):
+        """Run app.py once, showing `view` (None = whatever the session already has)."""
+        for bucket in (self.st.html_out, self.st.markdown_out, self.st.messages, self.st.charts,
+                       self.st.widgets, self.st.buttons):
             bucket.clear()
+        if view is not None:
+            self.st.session_state["view"] = view
         runpy.run_path(str(ROOT / "app.py"), run_name="app_under_test")
         return "\n".join(self.st.html_out)
+
+    def run_all_views(self):
+        """Run every page once. Returns {view: (html, chart keys, widgets, buttons)}."""
+        out = {}
+        for view in VIEW_IDS:
+            page = self.run_app(view)
+            self.assert_well_formed()
+            out[view] = (page, [k for k, _ in self.st.charts], list(self.st.widgets), list(self.st.buttons))
+        return out
 
     def assert_well_formed(self):
         for markup in self.st.html_out:
@@ -250,54 +270,126 @@ class UiSmokeTests(unittest.TestCase):
     def test_demo_mode_page_has_new_ui(self):
         self.rt.update_settings(demo_interval_s=0.2, store_interval_s=1)
         time.sleep(1.0)
-        page = self.run_app()
+        page = self.run_app("analytics")
         self.assertIn("gg-stats", page)
         self.assert_well_formed()
 
     def test_demo_mode_full_page(self):
         self.rt.update_settings(demo_interval_s=0.2, store_interval_s=1)
         time.sleep(1.2)
-        page = self.run_app()
-        self.assert_well_formed()
-        self.assertIn("DEMO MODE", page)
-        self.assertIn("GAS GAUGE", page)
-        self.assertIn("SMART LPG MONITORING SYSTEM", page)
+        views = self.run_all_views()
+        everywhere = "\n".join(v[0] for v in views.values())
+        self.assertIn("DEMO MODE", everywhere)
+        self.assertIn("GAS GAUGE", everywhere)
+        self.assertIn("SMART LPG MONITORING SYSTEM", everywhere)
+        overview = views["overview"][0]
         for label in ("Remaining gas", "Consumed today", "Total cylinder weight", "Estimated days left",
-                      "Avg daily consumption", "Sensor connection", "Cylinder details"):
-            self.assertIn(label, page)
-        self.assertEqual([k for k, _ in self.st.charts], ["chart_level", "chart_weight", "chart_consumption"])
+                      "Avg daily consumption", "Sensor connection"):
+            self.assertIn(label, overview)
+        self.assertIn("Cylinder details", views["consumption"][0])
+        # each chart lives on exactly one page
+        self.assertEqual(views["analytics"][1], ["chart_level", "chart_weight"])
+        self.assertEqual(views["consumption"][1], ["chart_consumption"])
+        for view in ("overview", "cylinder", "alerts", "demo", "settings"):
+            self.assertEqual(views[view][1], [], view)
+        self.run_app("analytics")
         for _, fig in self.st.charts:
             self.assertTrue(fig.traces, "chart has no data")
-        self.assertEqual(len(self.st.charts[2][1].traces[0].kw["y"]), len(self.st.charts[2][1].traces[0].kw["x"]))
+            self.assertEqual(fig.layout.get("height"), 330)
+        self.run_app("consumption")
+        trace = self.st.charts[0][1].traces[0]
+        self.assertEqual(len(trace.kw["y"]), len(trace.kw["x"]))
         css = "\n".join(self.st.markdown_out)
         self.assertIn("--lime:", css)
         self.assertIn(".gg-card", css)
         # gauge SVG must be well-formed XML
+        page = overview
         start = page.index("<svg class=\"gg-gauge-svg\"")
         svg = page[start:page.index("</svg>", start) + 6]
         root = ET.fromstring(svg)
         self.assertEqual(root.tag, "svg")
+        # demo controls and the live gauge preview are on the Demo page
+        self.assertIn("gg-gauge-svg", views["demo"][0])
+        self.assertTrue(any("Gas level" in w[1] for w in views["demo"][2]))
+        # settings widgets only on the Settings page
+        self.assertTrue(any("Data source" in w[1] for w in views["settings"][2]))
+        self.assertFalse(any("Cylinder capacity" in w[1] for w in views["overview"][2]))
 
     def test_all_modes_themes_and_panels_render(self):
-        self.st.session_state["show_settings"] = True
         for mode in ("wokwi", "hardware", "demo"):
             for theme in ("light", "dark"):
                 errors = self.rt.update_settings(data_source=mode, theme=theme, wokwi_transport="paste")
                 self.assertEqual(errors, [])
                 time.sleep(0.3)
-                page = self.run_app()
-                self.assert_well_formed()
-                self.assertIn(config_label(mode), page)
-                self.assertEqual(len(self.st.charts), 3)
-                self.assertTrue(any("Settings" in w[1] or "Data source" in w[1] for w in self.st.widgets))
+                views = self.run_all_views()
+                self.assertIn(config_label(mode), views["overview"][0])
+                self.assertEqual(views["analytics"][1] + views["consumption"][1],
+                                 ["chart_level", "chart_weight", "chart_consumption"])
+                self.assertTrue(any("Data source" in w[1] for w in views["settings"][2]))
                 self.assertFalse([m for m in self.st.messages if m[0] == "error"], self.st.messages)
         # hardware / wokwi with nothing connected: clear message, NO DATA gauge, charts show placeholder
         self.rt.update_settings(data_source="hardware", serial_port="")
         time.sleep(1.2)
-        page = self.run_app()
+        page = self.run_app("overview")
         self.assertIn("NO DATA", page)
-        self.assertTrue(any(a for a in self.st.charts[0][1].annotations))
         self.assertTrue("ERROR" in page or "CONNECTING" in page)
+        self.run_app("analytics")
+        self.assertTrue(any(a for a in self.st.charts[0][1].annotations))
+
+    def test_sidebar_navigation(self):
+        self.rt.update_settings(data_source="demo")
+        for view in VIEW_IDS:
+            self.run_app(view)
+            nav = {kw["key"]: (label, kw) for label, kw in self.st.buttons if kw.get("key", "").startswith("nav-")}
+            self.assertEqual(set(nav), {f"nav-{v}" for v in VIEW_IDS})  # all pages in the sidebar, demo included
+            for key, (label, kw) in nav.items():
+                self.assertTrue(kw["icon"].startswith(":material/"), key)
+                self.assertEqual(kw["type"], "primary" if key == f"nav-{view}" else "secondary", (view, key))
+            self.assertEqual(self.st.session_state["view"], view)
+        # a nav click only stores the view; the next run shows it
+        from components import sidebar
+        sidebar._go("alerts")
+        self.assertEqual(self.st.session_state["view"], "alerts")
+        self.assertEqual(self.st.query_params["view"], "alerts")
+
+    def test_demo_page_hidden_outside_demo_mode(self):
+        self.rt.update_settings(data_source="wokwi", wokwi_transport="paste")
+        time.sleep(0.3)
+        page = self.run_app("demo")  # asking for it anyway falls back to the overview
+        self.assertEqual(self.st.session_state["view"], "overview")
+        self.assertIn("Remaining gas", page)
+        keys = [kw.get("key") for _, kw in self.st.buttons]
+        self.assertNotIn("nav-demo", keys)
+        self.assertIn("nav-settings", keys)
+
+    def test_view_restored_from_url(self):
+        self.st.query_params["view"] = "consumption"
+        self.st.session_state.pop("view", None)
+        self.run_app()
+        self.assertEqual(self.st.session_state["view"], "consumption")
+        self.assertEqual([k for k, _ in self.st.charts], ["chart_consumption"])
+        self.st.session_state.pop("view", None)
+        self.st.query_params["view"] = "nonsense"
+        self.run_app()
+        self.assertEqual(self.st.session_state["view"], "overview")
+
+    def test_overview_alert_strip_and_layout_css(self):
+        self.rt.update_settings(demo_interval_s=0.2, store_interval_s=1)
+        time.sleep(0.8)
+        from components import demo_panel
+        demo_panel._jump(self.rt, 5.0)
+        time.sleep(2.0)
+        page = self.run_app("overview")
+        self.assertIn("gg-alertstrip", page)
+        self.assertIn("ACTIVE ALERT", page)
+        self.assertNotIn("gg-alert-title", page)  # full printouts belong to the Alerts page
+        self.run_app("alerts")
+        self.assertIn("gg-alert-title", "\n".join(self.st.html_out))
+        css = (ROOT / "assets" / "styles.css").read_text(encoding="utf-8")
+        hidden = css[:css.index("{", css.index("[data-testid=\"stToolbar\"]"))]
+        self.assertNotIn("stSidebar", hidden)  # the sidebar must not be in the display:none list
+        for needle in ("100vh", "gg_nav", "st-key-nav-", "@media (max-width: 768px)"):
+            self.assertIn(needle, css)
 
     def test_wokwi_paste_end_to_end(self):
         self.rt.update_settings(data_source="wokwi", wokwi_transport="paste")
@@ -313,7 +405,7 @@ class UiSmokeTests(unittest.TestCase):
         time.sleep(2.0)
         self.assertEqual(self.rt.db.count("wokwi"), 30)
         self.assertEqual(self.rt.db.count("demo"), demo_rows_before)  # Wokwi data never lands in demo
-        page = self.run_app()
+        page = self.run_app("overview")
         self.assert_well_formed()
         self.assertIn("WOKWI", page)
         self.assertIn("IMPORTED", page)
@@ -328,20 +420,20 @@ class UiSmokeTests(unittest.TestCase):
             if self.rt.manager.source.state()["target_weight"] is None:
                 break
         time.sleep(1.2)
-        page = self.run_app()
+        page = self.run_app("alerts")
         self.assertIn("Critical gas level", page)
         self.assertIn("CRITICAL", page)
         demo_panel._jump(self.rt, 60.0)
         time.sleep(1.5)  # let the new level be stored before the next change
         demo_panel._spike(self.rt, -2.0)
         time.sleep(2.2)
-        page = self.run_app()
+        page = self.run_app("alerts")
         self.assertIn("Abnormal weight change", page)
         demo_panel._set_scenario  # exists
         self.st.session_state["demo_scenario"] = "sensor_fault"
         demo_panel._set_scenario(self.rt)
         time.sleep(1.5)
-        page = self.run_app()
+        page = self.run_app("alerts")
         self.assertIn("Sensor fault", page)
         self.assert_well_formed()
 

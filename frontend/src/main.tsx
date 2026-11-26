@@ -25,17 +25,19 @@ function FromStreamlit() {
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
   }, [])
+  // `fill` = the page sizes the iframe itself (full-screen dashboard view), so the viewer simply fills it.
+  const fill = args?.fill === true
   const height = narrow ? Math.min(requested, 440) : requested
 
   React.useEffect(() => {
-    Streamlit.setFrameHeight(height)
-  }, [height])
+    if (!fill) Streamlit.setFrameHeight(height)
+  }, [height, fill])
 
   if (!args) return null
-  return <Viewer args={args} height={height} />
+  return <Viewer args={args} height={fill ? "100vh" : height} />
 }
 
-function Viewer({ args, height }: { args: StreamlitArgs; height: number }) {
+function Viewer({ args, height }: { args: StreamlitArgs; height: number | string }) {
   const source = SOURCES.includes(args.dataSource as GasDataSource) ? (args.dataSource as GasDataSource) : "demo"
   const status: GasConnectionStatus = args.connectionStatus === "connected" ? "connected" : "disconnected"
   const view = VIEWS.includes(args.initialView as GasGaugeView) ? (args.initialView as GasGaugeView) : "cylinder"

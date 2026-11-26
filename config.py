@@ -35,7 +35,7 @@ def now() -> datetime:
 
 APP_NAME = "GAS GAUGE"
 APP_SUBTITLE = "SMART LPG MONITORING SYSTEM"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 
 # --- Operating modes -------------------------------------------------------
 # "tag" is the value stored in the database `source` column. Every query is

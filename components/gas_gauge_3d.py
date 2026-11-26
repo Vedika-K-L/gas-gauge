@@ -73,9 +73,13 @@ def render_cylinder_3d(
     critical_pct: float,
     medium_pct: float = 60.0,
     height: int = 520,
+    fill: bool = False,
     key: str = "gg_cylinder_3d",
 ) -> bool:
-    """Render the 3D viewer. Returns False (after showing a hint) when it is unavailable."""
+    """Render the 3D viewer. Returns False (after showing a hint) when it is unavailable.
+
+    fill=True lets the page's CSS size the iframe (the full-screen 3D view); the viewer then fills it.
+    """
     component = _component() if is_built() else None
     if component is None:
         render(hint_html())
@@ -92,6 +96,7 @@ def render_cylinder_3d(
         mediumThreshold=_num(medium_pct),
         initialView="cylinder",
         height=height,
+        fill=bool(fill),
         key=key,
         default=None,
     )

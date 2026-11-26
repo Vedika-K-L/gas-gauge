@@ -1,4 +1,4 @@
-"""Header: logo, mode, connection indicator, clock, mode switch, theme and settings buttons."""
+"""Brand block (sidebar) and the slim top bar: page title, mode, connection indicator, clock, mode switch, theme."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -27,10 +27,6 @@ def _toggle_theme(rt) -> None:
     rt.update_settings(theme="light" if rt.settings.theme == "dark" else "dark")
 
 
-def _toggle_settings() -> None:
-    st.session_state["show_settings"] = not st.session_state.get("show_settings", False)
-
-
 @st.fragment(run_every=1)
 def _status_fragment() -> None:
     """Mode badge, connection pill and clock; refreshes every second on its own."""
@@ -53,22 +49,25 @@ def _status_fragment() -> None:
     )
 
 
-def render_header(rt) -> None:
+def brand_html() -> str:
+    return (
+        f"""
+        <div class="gg-brand">{_LOGO}
+          <div><div class="gg-wordmark">{esc(config.APP_NAME)}</div>
+          <div class="gg-subtitle">{esc(config.APP_SUBTITLE)}</div></div>
+        </div>
+        """
+    )
+
+
+def render_topbar(rt, title: str, subtitle: str) -> None:
+    """Slim bar above every view: page title on the left, status / data source / theme on the right."""
     settings = rt.settings
     st.session_state["mode_quick"] = settings.data_source  # keep in sync with the Settings panel
 
-    c_brand, c_status, c_mode, c_theme, c_settings = st.columns(
-        [3.0, 4.0, 3.2, 1.1, 1.3], vertical_alignment="center"
-    )
-    with c_brand:
-        render(
-            f"""
-            <div class="gg-brand">{_LOGO}
-              <div><div class="gg-wordmark">{esc(config.APP_NAME)}</div>
-              <div class="gg-subtitle">{esc(config.APP_SUBTITLE)}</div></div>
-            </div>
-            """
-        )
+    c_title, c_status, c_mode, c_theme = st.columns([3.0, 4.2, 3.0, 1.2], vertical_alignment="center")
+    with c_title:
+        render(f'<div class="gg-pagetitle">{esc(title)}</div><div class="gg-pagesub">{esc(subtitle)}</div>')
     with c_status:
         _status_fragment()
     with c_mode:
@@ -90,12 +89,4 @@ def render_header(rt) -> None:
             icon=":material/light_mode:" if dark else ":material/dark_mode:",
             on_click=_toggle_theme,
             args=(rt,),
-        )
-    with c_settings:
-        st.button(
-            "Settings",
-            key="btn_settings",
-            icon=":material/settings:",
-            on_click=_toggle_settings,
-            type="primary" if st.session_state.get("show_settings") else "secondary",
         )

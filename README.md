@@ -24,7 +24,7 @@ Every reading is stored with its source, and every chart, metric and alert reads
 
 3. The dashboard opens at <http://localhost:8501> and starts in **Demo mode**.
 
-Switch mode or edit any setting from the **Settings** panel in the header. Settings are saved to `data/settings.json` and readings to `data/gas_history.db`.
+Switch mode from the top bar (DEMO / WOKWI / HARDWARE) and edit any setting on the **Settings** page in the left sidebar. Settings are saved to `data/settings.json` and readings to `data/gas_history.db`.
 
 ## Connecting your Wokwi simulation
 
@@ -64,6 +64,12 @@ Plug in the Uno, choose **Physical hardware**. Leave the port empty to auto-dete
 
 Low gas (default 25%), critical gas (default 10%), sensor disconnected / sensor fault, abnormal weight change (default 1.5 kg within 10 minutes), refill or cylinder replacement detected (a rise of 5 kg or more by default), and connection errors. All thresholds are editable. The default Low and Critical cut-offs line up with the sketch's LED/LCD status (above 60% normal, above 25% medium, otherwise low).
 
+## Layout
+
+A fixed left sidebar holds the navigation; each item opens its own page in the main area, sized to one screen:
+Overview, 3D Cylinder, Analytics, Consumption, Alerts, Demo Controls (demo mode only) and Settings.
+The selected page is kept in the URL (`?view=analytics`). On phones the sidebar becomes a bottom icon bar.
+
 ## Project layout
 
 ```
@@ -77,7 +83,7 @@ demo_generator.py       Demo source and 7-day history
 data_manager.py         SQLite storage
 analytics.py            Gas maths, consumption, days remaining
 alerts.py               Alert rules
-components/             Header, gauge, cards, charts, settings, demo controls
+components/             Sidebar + views, top bar, gauge, cards, charts, settings, demo controls
 assets/styles.css       Theme and layout
 tests/                  python -m unittest discover -s tests
 ```

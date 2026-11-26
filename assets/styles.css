@@ -10,8 +10,7 @@
 /* ---- Streamlit chrome ---------------------------------------------------- */
 .stApp { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
 [data-testid="stHeader"] { background: transparent; }
-[data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer,
-[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], #MainMenu, footer { display: none !important; }
 .block-container { padding: 1.4rem 2rem 3rem; max-width: 1500px; }
 
 .stApp, .stApp p, .stApp li, .stApp label, .stApp h1, .stApp h2, .stApp h3,
@@ -376,3 +375,115 @@ html body .stApp button[data-testid*="primary"], html body .stApp button[kind="p
   background: var(--forest-deep) !important; color: #fff !important; border: 1px solid var(--forest) !important;
 }
 html body .stApp button[data-testid*="primary"] *, html body .stApp button[kind="primary"] * { color: #fff !important; }
+
+
+/* =====================================================================================
+   9. Admin layout: fixed left sidebar + one main area, sized to the screen (100vh).
+   Only layout is changed here; colours, fonts and cards all come from the rules above.
+   ===================================================================================== */
+
+/* The page itself never scrolls; only the main area may, as a fallback on short screens. */
+html, body, .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"] {
+  height: 100vh; height: 100dvh; overflow: hidden !important;
+}
+[data-testid="stHeader"] { display: none !important; }
+[data-testid="stMain"], section.main {
+  height: 100vh; height: 100dvh; overflow-x: hidden; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+[data-testid="stMainBlockContainer"], .block-container {
+  max-width: none !important; padding: 14px 22px 8px !important;
+}
+[data-testid="stMain"] [data-testid="stVerticalBlock"] { gap: .7rem; }
+
+/* Sidebar: always open, cannot be collapsed or resized */
+[data-testid="stSidebar"][data-testid="stSidebar"] {
+  display: flex !important; visibility: visible !important; transform: none !important; margin-left: 0 !important;
+  position: relative; flex: none; width: 252px !important; min-width: 252px !important; max-width: 252px !important;
+  height: 100vh; height: 100dvh;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 90%, transparent), color-mix(in srgb, var(--surface) 72%, transparent)) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+  border-right: 1px solid var(--border); box-shadow: inset -1px 0 0 var(--glass-edge);
+}
+[data-testid="stSidebarCollapseButton"], [data-testid="stSidebarCollapsedControl"], [data-testid="collapsedControl"],
+[data-testid="stSidebarHeader"], [data-testid="stSidebarResizeHandle"] { display: none !important; }
+[data-testid="stSidebarContent"] { height: 100%; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; }
+[data-testid="stSidebarUserContent"] { padding: 20px 14px 16px !important; }
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: .35rem; }
+
+.gg-sidebrand { padding: 2px 6px 16px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+.gg-sidebrand .gg-brand { gap: 12px; }
+.gg-sidebrand .gg-logo { width: 42px; height: 42px; }
+.gg-sidebrand .gg-wordmark { font-size: 19px; }
+.gg-sidebrand .gg-subtitle { font-size: 8.5px; letter-spacing: .16em; line-height: 1.35; white-space: normal; }
+.gg-navlabel { margin: 14px 8px 6px; font: 600 10px var(--font-mono); letter-spacing: .26em; color: var(--muted); }
+.gg-sidefoot { margin: 18px 8px 0; font: 500 10px var(--font-mono); letter-spacing: .16em; color: var(--muted); }
+
+/* Menu items. Specificity is raised on purpose: section 8 forces every button to the palette. */
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] { width: 100%; }
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid^="stBaseButton"] {
+  width: 100%; min-height: 44px; padding: 0 14px; justify-content: flex-start; text-align: left;
+  background: transparent !important; border: 1px solid transparent !important; border-radius: 12px;
+  color: var(--muted) !important; box-shadow: none !important; transform: none !important;
+  font: 600 12.5px var(--font-mono); letter-spacing: .05em;
+  transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid^="stBaseButton"] * {
+  color: inherit !important;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button > div { width: 100%; }
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button p {
+  display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin: 0; text-align: left;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid^="stBaseButton"]:hover {
+  background: color-mix(in srgb, var(--text) 7%, transparent) !important; color: var(--text) !important;
+}
+/* Selected item */
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid="stBaseButton-primary"] {
+  background: color-mix(in srgb, var(--forest) 20%, transparent) !important;
+  border-color: color-mix(in srgb, var(--forest) 50%, transparent) !important;
+  color: var(--text) !important; box-shadow: inset 3px 0 0 var(--lime) !important;
+}
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid="stBaseButton-primary"] * { color: var(--text) !important; }
+html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid="stBaseButton-primary"] [data-testid="stIconMaterial"] { color: var(--lime) !important; }
+
+/* Top bar */
+.gg-pagetitle { font: 700 19px/1.1 var(--font-mono); letter-spacing: .06em; color: var(--text); }
+.gg-pagesub { margin-top: 5px; font: 500 10px var(--font-mono); letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+.gg-hstatus { gap: 14px; }
+
+/* One-line alert summary on the overview */
+.gg-alertstrip {
+  display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--tone) 45%, var(--border));
+  background: color-mix(in srgb, var(--tone) 10%, var(--surface));
+  color: var(--tone); font: 700 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+}
+.gg-strip-more { margin-left: auto; color: var(--muted); font-weight: 600; letter-spacing: .12em; }
+
+/* 3D page: the iframe takes whatever height is left under the top bar */
+iframe[title*="gas_gauge_3d"] { height: clamp(380px, calc(100vh - 128px), 960px) !important; }
+.gg-gauge-card { min-height: 0; }
+
+/* Tablets and phones: the sidebar becomes a bottom tab bar (icons only) */
+@media (max-width: 768px) {
+  [data-testid="stSidebar"][data-testid="stSidebar"] {
+    position: fixed !important; left: 0; right: 0; bottom: 0; top: auto; z-index: 1000;
+    width: 100vw !important; min-width: 100vw !important; max-width: 100vw !important; height: 62px;
+    border-right: 0; border-top: 1px solid var(--border); box-shadow: 0 -8px 24px rgba(0, 0, 0, .25);
+  }
+  [data-testid="stSidebarContent"] { overflow: hidden; }
+  [data-testid="stSidebarUserContent"] { padding: 6px 8px !important; }
+  .gg-sidebrand, .gg-navlabel, .gg-sidefoot { display: none !important; }
+  .st-key-gg_nav [data-testid="stVerticalBlock"], .st-key-gg_nav { flex-direction: row !important; gap: 4px !important; justify-content: space-between; }
+  html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] { flex: 1 1 0; min-width: 0; }
+  html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button[data-testid^="stBaseButton"] {
+    min-height: 46px; padding: 0; justify-content: center;
+  }
+  html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button p { justify-content: center; font-size: 0; gap: 0; }
+  html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-key-nav-"] button [data-testid="stIconMaterial"] { font-size: 24px; }
+  [data-testid="stMainBlockContainer"], .block-container { padding: 10px 12px 84px !important; }
+  iframe[title*="gas_gauge_3d"] { height: clamp(360px, calc(100dvh - 230px), 640px) !important; }
+  .gg-pagetitle { font-size: 16px; }
+  .gg-strip-more { display: none; }
+}
