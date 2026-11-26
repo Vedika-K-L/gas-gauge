@@ -1,57 +1,43 @@
-"""Main gas-level display: a custom SVG ring gauge with threshold markers."""
+"""Main gas-level display: a ring gauge with threshold markers (HTML + CSS)."""
 from __future__ import annotations
 
-import math
 from typing import Optional
 
 import config
 from components.common import ago, esc, num, render
 
-_RADIUS = 94
-_CIRCUMFERENCE = 2 * math.pi * _RADIUS
+def _step(pct: float) -> int:
+    """Position on the ring in half-percent steps (0-200); CSS classes gg-p0 ... gg-p200 turn this into an angle."""
+    return int(round(min(max(pct, 0.0), 100.0) * 2))
 
 
-def _point(radius: float, pct: float) -> tuple[float, float]:
-    angle = math.radians(-90 + pct * 3.6)  # 0% at 12 o'clock, clockwise
-    return 120 + radius * math.cos(angle), 120 + radius * math.sin(angle)
-
-
-def gauge_svg(pct: Optional[float], settings) -> str:
+def gauge_ring(pct: Optional[float], settings) -> str:
+    """The ring gauge, drawn with plain HTML + CSS (conic-gradient). No inline SVG: some Streamlit versions
+    strip <svg> from st.html, which left this card without its ring."""
     value = 0.0 if pct is None else min(max(pct, 0.0), 100.0)
-    offset = _CIRCUMFERENCE * (1 - value / 100.0)
-    arc_class = "gg-arc gg-arc-empty" if value < 0.3 else "gg-arc"
+    empty = " gg-arc-empty" if value < 0.3 else ""
+    at = f"gg-p{_step(value)}"
 
-    ticks = []
-    for step in range(0, 100, 5):  # 100% overlaps 0%
-        major = step % 25 == 0
-        x1, y1 = _point(106 if major else 110, step)
-        x2, y2 = _point(116, step)
-        ticks.append(
-            f'<line class="gg-tick{" gg-tick-major" if major else ""}" '
-            f'x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}"/>'
-        )
-    marks = []
-    for threshold, css in ((settings.low_pct, "gg-mark-warn"), (settings.critical_pct, "gg-mark-crit")):
-        x1, y1 = _point(103, threshold)
-        x2, y2 = _point(119, threshold)
-        marks.append(f'<line class="{css}" x1="{x1:.2f}" y1="{y1:.2f}" x2="{x2:.2f}" y2="{y2:.2f}"/>')
-
+    ticks = "".join(
+        f'<i class="gg-tick{" gg-tick-major" if step % 25 == 0 else ""} gg-p{step * 2}"></i>'
+        for step in range(0, 100, 5)  # 100% overlaps 0%
+    )
+    marks = "".join(
+        f'<i class="{css} gg-p{_step(threshold)}"></i>'
+        for threshold, css in ((settings.low_pct, "gg-mark gg-mark-warn"), (settings.critical_pct, "gg-mark gg-mark-crit"))
+    )
     shown = "--" if pct is None else f"{value:.1f}"
     return (
-        '<svg class="gg-gauge-svg" viewBox="0 0 240 240" role="img" aria-label="Gas level gauge">'
-        f'<circle class="gg-track" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="14"/>'
-        f'<circle class="{arc_class} gg-arc-glow" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="24" '
-        f'stroke-linecap="round" transform="rotate(-90 120 120)" '
-        f'stroke-dasharray="{_CIRCUMFERENCE:.2f}" stroke-dashoffset="{offset:.2f}"/>'
-        f'<circle class="{arc_class}" cx="120" cy="120" r="{_RADIUS}" fill="none" stroke-width="14" '
-        f'stroke-linecap="round" transform="rotate(-90 120 120)" '
-        f'stroke-dasharray="{_CIRCUMFERENCE:.2f}" stroke-dashoffset="{offset:.2f}"/>'
-        + "".join(ticks)
-        + "".join(marks)
-        + f'<text class="gg-gauge-pct" x="120" y="126" text-anchor="middle">{shown}'
-        '<tspan class="gg-gauge-sign">%</tspan></text>'
-        '<text class="gg-gauge-cap" x="120" y="150" text-anchor="middle">REMAINING</text>'
-        "</svg>"
+        '<div class="gg-ring" role="img" aria-label="Gas level gauge">'
+        '<i class="gg-ring-track"></i>'
+        f'<i class="gg-ring-glow {at}{empty}"></i>'
+        f'<i class="gg-ring-arc {at}{empty}"></i>'
+        f'<i class="gg-ring-dot gg-p0{empty}"></i><i class="gg-ring-dot {at}{empty}"></i>'
+        + ticks
+        + marks
+        + f'<div class="gg-ring-center"><div class="gg-ring-pct">{shown}<span class="gg-ring-sign">%</span></div>'
+        '<div class="gg-ring-cap">REMAINING</div></div>'
+        "</div>"
     )
 
 
@@ -65,7 +51,7 @@ def build_gauge_html(gas, settings, mode: str, latest_ts: Optional[str], source_
         <span>{tag}<span class="gg-status">{esc(gas.status)}</span></span>
       </div>
       <div class="gg-gauge-body">
-        <div class="gg-gauge-wrap">{gauge_svg(gas.level_pct, settings)}</div>
+        <div class="gg-gauge-wrap">{gauge_ring(gas.level_pct, settings)}</div>
         <div class="gg-gauge-stats">
           <div class="gg-stat"><span class="gg-label">Remaining LPG</span>
             <span class="gg-stat-val">{num(gas.remaining_kg)}<small>kg</small></span></div>

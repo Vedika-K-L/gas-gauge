@@ -60,16 +60,17 @@ def _go(view: str) -> None:
 
 def render_sidebar(rt, active: str) -> None:
     with st.sidebar:
-        render(f'<div class="gg-sidebrand">{brand_html()}</div>')
-        render('<div class="gg-navlabel">MENU</div>')
-        with st.container(key="gg_nav"):
-            for view_id, label, icon, *_ in visible_views(rt.settings.data_source):
-                st.button(
-                    label,
-                    key=f"nav-{view_id}",
-                    icon=icon,
-                    on_click=_go,
-                    args=(view_id,),
-                    type="primary" if view_id == active else "secondary",
-                )
+        render(f'<div class="gg-sidebrand">{brand_html(rt.settings.theme)}</div>')
+        with st.container(key="gg_navwrap"):  # the menu sits in the vertical middle of the sidebar
+            render('<div class="gg-navlabel">MENU</div>')
+            with st.container(key="gg_nav"):
+                for view_id, label, icon, *_ in visible_views(rt.settings.data_source):
+                    st.button(
+                        label,
+                        key=f"nav-{view_id}",
+                        icon=icon,
+                        on_click=_go,
+                        args=(view_id,),
+                        type="primary" if view_id == active else "secondary",
+                    )
         render(f'<div class="gg-sidefoot">{esc(config.APP_NAME)} v{esc(config.APP_VERSION)}</div>')

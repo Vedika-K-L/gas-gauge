@@ -302,14 +302,19 @@ class UiSmokeTests(unittest.TestCase):
         css = "\n".join(self.st.markdown_out)
         self.assertIn("--lime:", css)
         self.assertIn(".gg-card", css)
-        # gauge SVG must be well-formed XML
+        # ring gauge is plain HTML (no inline <svg>, which some Streamlit versions strip)
         page = overview
-        start = page.index("<svg class=\"gg-gauge-svg\"")
-        svg = page[start:page.index("</svg>", start) + 6]
-        root = ET.fromstring(svg)
-        self.assertEqual(root.tag, "svg")
+        self.assertIn('class="gg-ring"', page)
+        self.assertNotIn("<svg", page)
+        self.assertIn("gg-ring-arc", page)
+        self.assertIn("gg-p", page)
+        # logo is an <img> data URI that decodes to valid SVG
+        import base64, re
+        uri = re.search(r'class="gg-logo"[^>]*src="data:image/svg\+xml;base64,([^"]+)"', page)
+        self.assertIsNotNone(uri)
+        self.assertEqual(ET.fromstring(base64.b64decode(uri.group(1))).tag.split("}")[-1], "svg")
         # demo controls and the live gauge preview are on the Demo page
-        self.assertIn("gg-gauge-svg", views["demo"][0])
+        self.assertIn("gg-ring", views["demo"][0])
         self.assertTrue(any("Gas level" in w[1] for w in views["demo"][2]))
         # settings widgets only on the Settings page
         self.assertTrue(any("Data source" in w[1] for w in views["settings"][2]))
@@ -385,6 +390,9 @@ class UiSmokeTests(unittest.TestCase):
         self.assertNotIn("gg-alert-title", page)  # full printouts belong to the Alerts page
         self.run_app("alerts")
         self.assertIn("gg-alert-title", "\n".join(self.st.html_out))
+        keys = [kw.get("key") for _, kw in self.st.buttons]
+        self.assertIn("btn_theme_light", keys)
+        self.assertIn("btn_theme_dark", keys)
         css = (ROOT / "assets" / "styles.css").read_text(encoding="utf-8")
         hidden = css[:css.index("{", css.index("[data-testid=\"stToolbar\"]"))]
         self.assertNotIn("stSidebar", hidden)  # the sidebar must not be in the display:none list

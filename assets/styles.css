@@ -499,7 +499,6 @@ iframe[title*="gas_gauge_3d"] { height: clamp(380px, calc(100vh - 128px), 960px)
   gap: clamp(20px, 4vw, 56px); width: 100%; margin: 0 auto;
 }
 .gg-gauge-wrap { display: grid; place-items: center; width: 100%; }
-.gg-gauge-svg { width: 100%; max-width: 270px; aspect-ratio: 1 / 1; height: auto; overflow: visible; }
 .gg-card-foot { text-align: center; }
 @media (max-width: 900px) { .gg-gauge-body { grid-template-columns: minmax(0, 1fr); } }
 
@@ -520,3 +519,252 @@ html body .stApp [data-testid="stSidebar"][data-testid="stSidebar"] [class*="st-
 
 /* 3D page: the viewer is centred in the main area */
 [data-testid="stCustomComponentV1"], [data-testid="stCustomComponentV1"] iframe { margin-left: auto; margin-right: auto; }
+
+
+/* ---- 11. Ring gauge in plain HTML/CSS (replaces the inline SVG) ------------------------- */
+.gg-p0 { --p: 0; }
+.gg-p1 { --p: 0.5; }
+.gg-p2 { --p: 1; }
+.gg-p3 { --p: 1.5; }
+.gg-p4 { --p: 2; }
+.gg-p5 { --p: 2.5; }
+.gg-p6 { --p: 3; }
+.gg-p7 { --p: 3.5; }
+.gg-p8 { --p: 4; }
+.gg-p9 { --p: 4.5; }
+.gg-p10 { --p: 5; }
+.gg-p11 { --p: 5.5; }
+.gg-p12 { --p: 6; }
+.gg-p13 { --p: 6.5; }
+.gg-p14 { --p: 7; }
+.gg-p15 { --p: 7.5; }
+.gg-p16 { --p: 8; }
+.gg-p17 { --p: 8.5; }
+.gg-p18 { --p: 9; }
+.gg-p19 { --p: 9.5; }
+.gg-p20 { --p: 10; }
+.gg-p21 { --p: 10.5; }
+.gg-p22 { --p: 11; }
+.gg-p23 { --p: 11.5; }
+.gg-p24 { --p: 12; }
+.gg-p25 { --p: 12.5; }
+.gg-p26 { --p: 13; }
+.gg-p27 { --p: 13.5; }
+.gg-p28 { --p: 14; }
+.gg-p29 { --p: 14.5; }
+.gg-p30 { --p: 15; }
+.gg-p31 { --p: 15.5; }
+.gg-p32 { --p: 16; }
+.gg-p33 { --p: 16.5; }
+.gg-p34 { --p: 17; }
+.gg-p35 { --p: 17.5; }
+.gg-p36 { --p: 18; }
+.gg-p37 { --p: 18.5; }
+.gg-p38 { --p: 19; }
+.gg-p39 { --p: 19.5; }
+.gg-p40 { --p: 20; }
+.gg-p41 { --p: 20.5; }
+.gg-p42 { --p: 21; }
+.gg-p43 { --p: 21.5; }
+.gg-p44 { --p: 22; }
+.gg-p45 { --p: 22.5; }
+.gg-p46 { --p: 23; }
+.gg-p47 { --p: 23.5; }
+.gg-p48 { --p: 24; }
+.gg-p49 { --p: 24.5; }
+.gg-p50 { --p: 25; }
+.gg-p51 { --p: 25.5; }
+.gg-p52 { --p: 26; }
+.gg-p53 { --p: 26.5; }
+.gg-p54 { --p: 27; }
+.gg-p55 { --p: 27.5; }
+.gg-p56 { --p: 28; }
+.gg-p57 { --p: 28.5; }
+.gg-p58 { --p: 29; }
+.gg-p59 { --p: 29.5; }
+.gg-p60 { --p: 30; }
+.gg-p61 { --p: 30.5; }
+.gg-p62 { --p: 31; }
+.gg-p63 { --p: 31.5; }
+.gg-p64 { --p: 32; }
+.gg-p65 { --p: 32.5; }
+.gg-p66 { --p: 33; }
+.gg-p67 { --p: 33.5; }
+.gg-p68 { --p: 34; }
+.gg-p69 { --p: 34.5; }
+.gg-p70 { --p: 35; }
+.gg-p71 { --p: 35.5; }
+.gg-p72 { --p: 36; }
+.gg-p73 { --p: 36.5; }
+.gg-p74 { --p: 37; }
+.gg-p75 { --p: 37.5; }
+.gg-p76 { --p: 38; }
+.gg-p77 { --p: 38.5; }
+.gg-p78 { --p: 39; }
+.gg-p79 { --p: 39.5; }
+.gg-p80 { --p: 40; }
+.gg-p81 { --p: 40.5; }
+.gg-p82 { --p: 41; }
+.gg-p83 { --p: 41.5; }
+.gg-p84 { --p: 42; }
+.gg-p85 { --p: 42.5; }
+.gg-p86 { --p: 43; }
+.gg-p87 { --p: 43.5; }
+.gg-p88 { --p: 44; }
+.gg-p89 { --p: 44.5; }
+.gg-p90 { --p: 45; }
+.gg-p91 { --p: 45.5; }
+.gg-p92 { --p: 46; }
+.gg-p93 { --p: 46.5; }
+.gg-p94 { --p: 47; }
+.gg-p95 { --p: 47.5; }
+.gg-p96 { --p: 48; }
+.gg-p97 { --p: 48.5; }
+.gg-p98 { --p: 49; }
+.gg-p99 { --p: 49.5; }
+.gg-p100 { --p: 50; }
+.gg-p101 { --p: 50.5; }
+.gg-p102 { --p: 51; }
+.gg-p103 { --p: 51.5; }
+.gg-p104 { --p: 52; }
+.gg-p105 { --p: 52.5; }
+.gg-p106 { --p: 53; }
+.gg-p107 { --p: 53.5; }
+.gg-p108 { --p: 54; }
+.gg-p109 { --p: 54.5; }
+.gg-p110 { --p: 55; }
+.gg-p111 { --p: 55.5; }
+.gg-p112 { --p: 56; }
+.gg-p113 { --p: 56.5; }
+.gg-p114 { --p: 57; }
+.gg-p115 { --p: 57.5; }
+.gg-p116 { --p: 58; }
+.gg-p117 { --p: 58.5; }
+.gg-p118 { --p: 59; }
+.gg-p119 { --p: 59.5; }
+.gg-p120 { --p: 60; }
+.gg-p121 { --p: 60.5; }
+.gg-p122 { --p: 61; }
+.gg-p123 { --p: 61.5; }
+.gg-p124 { --p: 62; }
+.gg-p125 { --p: 62.5; }
+.gg-p126 { --p: 63; }
+.gg-p127 { --p: 63.5; }
+.gg-p128 { --p: 64; }
+.gg-p129 { --p: 64.5; }
+.gg-p130 { --p: 65; }
+.gg-p131 { --p: 65.5; }
+.gg-p132 { --p: 66; }
+.gg-p133 { --p: 66.5; }
+.gg-p134 { --p: 67; }
+.gg-p135 { --p: 67.5; }
+.gg-p136 { --p: 68; }
+.gg-p137 { --p: 68.5; }
+.gg-p138 { --p: 69; }
+.gg-p139 { --p: 69.5; }
+.gg-p140 { --p: 70; }
+.gg-p141 { --p: 70.5; }
+.gg-p142 { --p: 71; }
+.gg-p143 { --p: 71.5; }
+.gg-p144 { --p: 72; }
+.gg-p145 { --p: 72.5; }
+.gg-p146 { --p: 73; }
+.gg-p147 { --p: 73.5; }
+.gg-p148 { --p: 74; }
+.gg-p149 { --p: 74.5; }
+.gg-p150 { --p: 75; }
+.gg-p151 { --p: 75.5; }
+.gg-p152 { --p: 76; }
+.gg-p153 { --p: 76.5; }
+.gg-p154 { --p: 77; }
+.gg-p155 { --p: 77.5; }
+.gg-p156 { --p: 78; }
+.gg-p157 { --p: 78.5; }
+.gg-p158 { --p: 79; }
+.gg-p159 { --p: 79.5; }
+.gg-p160 { --p: 80; }
+.gg-p161 { --p: 80.5; }
+.gg-p162 { --p: 81; }
+.gg-p163 { --p: 81.5; }
+.gg-p164 { --p: 82; }
+.gg-p165 { --p: 82.5; }
+.gg-p166 { --p: 83; }
+.gg-p167 { --p: 83.5; }
+.gg-p168 { --p: 84; }
+.gg-p169 { --p: 84.5; }
+.gg-p170 { --p: 85; }
+.gg-p171 { --p: 85.5; }
+.gg-p172 { --p: 86; }
+.gg-p173 { --p: 86.5; }
+.gg-p174 { --p: 87; }
+.gg-p175 { --p: 87.5; }
+.gg-p176 { --p: 88; }
+.gg-p177 { --p: 88.5; }
+.gg-p178 { --p: 89; }
+.gg-p179 { --p: 89.5; }
+.gg-p180 { --p: 90; }
+.gg-p181 { --p: 90.5; }
+.gg-p182 { --p: 91; }
+.gg-p183 { --p: 91.5; }
+.gg-p184 { --p: 92; }
+.gg-p185 { --p: 92.5; }
+.gg-p186 { --p: 93; }
+.gg-p187 { --p: 93.5; }
+.gg-p188 { --p: 94; }
+.gg-p189 { --p: 94.5; }
+.gg-p190 { --p: 95; }
+.gg-p191 { --p: 95.5; }
+.gg-p192 { --p: 96; }
+.gg-p193 { --p: 96.5; }
+.gg-p194 { --p: 97; }
+.gg-p195 { --p: 97.5; }
+.gg-p196 { --p: 98; }
+.gg-p197 { --p: 98.5; }
+.gg-p198 { --p: 99; }
+.gg-p199 { --p: 99.5; }
+.gg-p200 { --p: 100; }
+.gg-ring { position: relative; width: 100%; max-width: 270px; aspect-ratio: 1 / 1; margin: 0 auto; container-type: inline-size; }
+.gg-ring > * { position: absolute; display: block; }
+.gg-ring-track, .gg-ring-arc {
+  inset: 7.92%; border-radius: 50%;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 13.9%), #000 calc(100% - 13.9% + .6px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 13.9%), #000 calc(100% - 13.9% + .6px));
+}
+.gg-ring-track { background: var(--track); }
+.gg-ring-arc { background: conic-gradient(var(--tone) calc(var(--p) * 1%), transparent 0); }
+.gg-ring-glow {
+  inset: 5.83%; border-radius: 50%; opacity: .22;
+  background: conic-gradient(var(--tone) calc(var(--p) * 1%), transparent 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 22.6%), #000 calc(100% - 22.6% + .6px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 22.6%), #000 calc(100% - 22.6% + .6px));
+}
+.gg-ring-dot {  /* round ends of the arc */
+  left: calc(50% - 2.917%); top: calc(50% - 2.917%); width: 5.833%; aspect-ratio: 1 / 1; border-radius: 50%;
+  background: var(--tone); transform: rotate(calc(var(--p) * 3.6deg)) translateY(-671.4%);
+}
+.gg-ring .gg-arc-empty { display: none; }
+.gg-tick, .gg-mark { inset: 0; transform: rotate(calc(var(--p) * 3.6deg)); }
+.gg-tick::before, .gg-mark::before { content: ""; position: absolute; left: 50%; }
+.gg-tick::before { top: 1.67%; height: 2.5%; width: 1px; margin-left: -.5px; background: var(--muted); opacity: .45; }
+.gg-tick-major::before { height: 4.17%; width: 2px; margin-left: -1px; opacity: .85; }
+.gg-mark::before { top: .42%; height: 6.67%; width: 2.5px; margin-left: -1.25px; border-radius: 2px; }
+.gg-mark-warn::before { background: var(--amber); }
+.gg-mark-crit::before { background: var(--red); }
+.gg-ring-center { inset: 0; display: grid; place-content: center; text-align: center; padding-top: 3%; }
+.gg-ring-pct { font: 700 54px/1 var(--font-mono); font-size: 22.5cqw; color: var(--text); letter-spacing: -.03em; }
+.gg-ring-sign { font-size: .41em; color: var(--muted); margin-left: .05em; letter-spacing: 0; }
+.gg-ring-cap { margin-top: 5%; font: 500 9px var(--font-mono); font-size: max(8px, 3.75cqw); letter-spacing: .26em; color: var(--muted); }
+
+/* Sidebar: brand on top, menu centred in the remaining height, version at the bottom */
+[data-testid="stSidebarUserContent"] { height: 100%; }
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] { min-height: calc(100vh - 40px); min-height: calc(100dvh - 40px); }
+.st-key-gg_navwrap { margin: auto 0; width: 100%; }
+@media (max-width: 768px) {
+  [data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] { min-height: 0; }
+  .st-key-gg_navwrap { margin: 0; }
+}
+
+/* Theme toggle: two icon-only buttons (sun | moon) */
+html body .stApp [class*="st-key-btn_theme_"] button[data-testid^="stBaseButton"] { min-height: 40px; padding: 0; justify-content: center; }
+html body .stApp [class*="st-key-btn_theme_"] button p { gap: 0; justify-content: center; }
+html body .stApp [class*="st-key-btn_theme_"] button [data-testid="stIconMaterial"] { font-size: 22px; }
